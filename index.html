@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <style>
-        /* TAMPILAN WINDOWS CLASSIC */
+        /* --- WINDOWS CLASSIC THEME --- */
         body {
             background-color: #3a6ea5;
             font-family: 'Tahoma', sans-serif;
@@ -23,7 +23,7 @@
         }
 
         .login-window {
-            width: 320px;
+            width: 310px;
             background-color: #ece9d8;
             border: 2px outset #fff;
             box-shadow: 10px 10px 20px rgba(0,0,0,0.3);
@@ -36,35 +36,47 @@
             display: flex; justify-content: space-between; align-items: center;
         }
 
-        .win-body { padding: 25px 20px; display: flex; flex-direction: column; gap: 15px; }
+        .win-body { padding: 30px 20px; display: flex; flex-direction: column; gap: 15px; }
 
         .input-group { display: flex; flex-direction: column; gap: 5px; }
         .label { font-weight: bold; color: #000; font-size: 11px; }
         
         .input-net {
             border: 2px inset #fff;
-            padding: 10px; font-family: 'Tahoma';
-            font-size: 16px; outline: none;
+            padding: 12px; font-family: 'Tahoma';
+            font-size: 20px; outline: none;
             background: #fff; text-align: center;
-            font-weight: bold; letter-spacing: 3px;
+            font-weight: bold; letter-spacing: 4px;
             width: 100%; box-sizing: border-box;
         }
         .input-net:focus { background: #ffffcc; }
 
-        /* Matikan tanda panah pada input number */
+        /* Sembunyikan panah input number */
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
         .btn-group { display: flex; justify-content: center; gap: 10px; margin-top: 5px; }
 
         .btn-win {
             border: 2px outset #fff;
-            background: #ece9d8; padding: 6px 20px;
-            font-weight: bold; font-size: 11px; cursor: pointer;
-            min-width: 90px;
+            background: #ece9d8; padding: 8px 25px;
+            font-weight: bold; font-size: 12px; cursor: pointer;
+            min-width: 100px;
         }
         .btn-win:active { border-style: inset; transform: translate(1px, 1px); }
 
-        .footer-info { text-align: center; color: #666; font-size: 9px; margin-top: 10px; }
+        /* --- STYLE POPUP CUSTOM (DIBAWAH INI) --- */
+        .custom-modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4); z-index: 9999;
+            display: none; justify-content: center; align-items: center;
+        }
+        .custom-modal-box {
+            width: 280px; background: #ece9d8; border: 2px outset #fff;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
+        }
+        .modal-body { padding: 20px; text-align: center; font-size: 12px; color: #000; font-weight: bold; }
+        
+        .footer-info { text-align: center; color: #666; font-size: 9px; margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -72,28 +84,37 @@
 <div class="login-window">
     <div class="win-header">
         <span>🔐 SIS Authenticator</span>
-        <div style="border:1px solid #fff; width:14px; height:14px; line-height:12px; text-align:center; cursor:pointer; background:#ece9d8; color:#000;"></div>
+        <div onclick="location.reload()" style="border:1px solid #fff; width:14px; height:14px; line-height:12px; text-align:center; cursor:pointer; background:#ece9d8; color:#000;">x</div>
     </div>
     
     <div class="win-body">
-        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:5px;">
             <div style="font-size:32px;">🔑</div>
-            <div style="font-size:12px; color:#000; font-weight: bold;">
-                LOGIN SISTEM
-            </div>
+            <div style="font-size:12px; color:#000; font-weight: bold;">LOHIN MENGGUNAMAN NIK</div>
         </div>
 
         <div class="input-group">
-            <span class="label">LOGIN MENGGUNAKAN NIK</span>
-            <input type="number" id="nik" class="input-net" placeholder="" maxlength="8" oninput="if(this.value.length > 8) this.value = this.value.slice(0, 8);" autofocus>
+            <input type="number" id="nik" class="input-net" placeholder="00000000" maxlength="8" oninput="if(this.value.length > 8) this.value = this.value.slice(0, 8);" autofocus>
         </div>
 
         <div class="btn-group">
             <button class="btn-win" id="btnLogin">OK</button>
-            <button class="btn-win" onclick="document.getElementById('nik').value=''">Cancel</button>
+            <button class="btn-win" onclick="document.getElementById('nik').value=''">Reset</button>
         </div>
 
-        <div class="footer-info">System Build v3.5 // Direct Access Mode</div>
+        <div class="footer-info">Build v4.5 // No-Host Popup Mode</div>
+    </div>
+</div>
+
+<div id="msgOverlay" class="custom-modal-overlay">
+    <div class="custom-modal-box">
+        <div class="win-header">
+            <span>ERROR!</span>
+        </div>
+        <div class="modal-body" id="msgContent">Pesan disini...</div>
+        <div class="modal-footer" style="padding:10px; display:flex; justify-content:center;">
+            <button class="btn-win" onclick="closeMsg()">OK</button>
+        </div>
     </div>
 </div>
 
@@ -117,11 +138,20 @@
     const btnLogin = document.getElementById('btnLogin');
     const nikInput = document.getElementById('nik');
 
+    // FUNGSI POPUP CUSTOM
+    window.showMsg = function(pesan) {
+        document.getElementById('msgContent').innerText = pesan;
+        document.getElementById('msgOverlay').style.display = 'flex';
+    }
+    window.closeMsg = function() {
+        document.getElementById('msgOverlay').style.display = 'none';
+    }
+
     async function processLogin() {
         const nikValue = nikInput.value.trim();
 
-        if (nikValue === "") {
-            alert("NIK tidak boleh kosong!");
+        if (!nikValue) {
+            showMsg("NIK tidak boleh kosong!");
             return;
         }
 
@@ -134,36 +164,37 @@
             
             if (snapshot.exists()) {
                 const data = snapshot.val();
-                
-                // Simpan Sesi
                 localStorage.setItem('so_session', JSON.stringify({
                     nik: nikValue,
                     nama: data.nama,
                     role: data.role
                 }));
 
-                // Redirect sesuai Role
-                if (data.role === 'MASTER') {
-                    window.location.href = 'dashboard_master.html';
-                } else {
-                    window.location.href = 'dashboard_user.html';
-                }
+                if (data.role === 'MASTER') window.location.href = 'dashboard_master.html';
+                else window.location.href = 'dashboard_user.html';
             } else {
-                alert("Gagal: NIK " + nikValue + " tidak terdaftar di toko ini!.");
+                showMsg("NIK [" + nikValue + "] TIDAK TERDAFTAR DI TOKO INI!");
                 btnLogin.disabled = false;
                 btnLogin.innerText = "OK";
             }
         } catch (err) {
-            alert("Error: Koneksi terputus.");
+            showMsg("ERROR: GAGAL TERHUBUNG DATABASE");
             btnLogin.disabled = false;
             btnLogin.innerText = "OK";
         }
     }
 
     btnLogin.addEventListener('click', processLogin);
-    nikInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') processLogin();
-    });
+    nikInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') processLogin(); });
+</script>
+
+<script>
+    // PWA Service Worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed', err));
+        });
+    }
 </script>
 
 </body>
