@@ -72,7 +72,7 @@
 <div class="login-window">
     <div class="win-header">
         <span>🔐 SIS Authenticator</span>
-        <div style="border:1px solid #fff; width:14px; height:14px; line-height:12px; text-align:center; cursor:pointer; background:#ece9d8; color:#000;">x</div>
+        <div style="border:1px solid #fff; width:14px; height:14px; line-height:12px; text-align:center; cursor:pointer; background:#ece9d8; color:#000;"></div>
     </div>
     
     <div class="win-body">
@@ -84,8 +84,8 @@
         </div>
 
         <div class="input-group">
-            <span class="label">MASUKKAN NIK (8 DIGIT):</span>
-            <input type="number" id="nik" class="input-net" placeholder="00000000" maxlength="8" oninput="if(this.value.length > 8) this.value = this.value.slice(0, 8);" autofocus>
+            <span class="label">LOGIN MENGGUNAKAN NIK</span>
+            <input type="number" id="nik" class="input-net" placeholder="" maxlength="8" oninput="if(this.value.length > 8) this.value = this.value.slice(0, 8);" autofocus>
         </div>
 
         <div class="btn-group">
@@ -149,7 +149,7 @@
                     window.location.href = 'dashboard_user.html';
                 }
             } else {
-                alert("Gagal: NIK " + nikValue + " tidak terdaftar.");
+                alert("Gagal: NIK " + nikValue + " tidak terdaftar di toko ini!.");
                 btnLogin.disabled = false;
                 btnLogin.innerText = "OK";
             }
