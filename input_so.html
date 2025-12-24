@@ -126,7 +126,7 @@
 <div id="dateModal" style="display:flex;"> <div class="date-card">
         <div style="font-size:40px; margin-bottom:10px;">📅</div>
         <h3 style="margin:0; color:#1565c0;">TANGGAL SO</h3>
-        <p style="font-size:12px; color:#666;">Pilih tanggal pelaksanaan Stock Opname</p>
+        <p style="font-size:12px; color:#666;">Pilih tanggal</p>
         
         <input type="date" id="inputDate" class="date-input">
         
@@ -151,8 +151,8 @@
         
         <div class="menu-card" onclick="openSoPage('CUSTOM')">
             <div class="icon">📝</div>
-            <div class="label">CUSTOM / MANUAL</div>
-            <div class="status-pill st-custom">SELALU BUKA</div>
+            <div class="label">CUSTOM</div>
+            <div class="status-pill st-custom">READY</div>
         </div>
 
         <div class="menu-card" id="card-PSM" onclick="checkAndOpen('PSM')">
@@ -286,13 +286,13 @@
                     // JIKA BUKA
                     card.classList.remove('card-disabled');
                     pill.className = 'status-pill st-open';
-                    pill.innerText = "DIBUKA";
+                    pill.innerText = "OPEN";
                     lock.style.display = 'none';
                 } else {
                     // JIKA TUTUP
                     card.classList.add('card-disabled');
                     pill.className = 'status-pill st-closed';
-                    pill.innerText = "DITUTUP";
+                    pill.innerText = "CLOSED";
                     lock.style.display = 'block';
                 }
             });
