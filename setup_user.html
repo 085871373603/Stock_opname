@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1565c0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SETUP USER - MOBILE</title>
+    <style>
+        /* --- GLOBAL & RESET --- */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            margin: 0; padding: 0;
+            background-color: #e3f2fd; /* Biru Muda Polos */
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            color: #333;
+            padding-top: 60px; /* Space untuk Header Fixed */
+            padding-bottom: 30px;
+        }
+
+        /* --- SECURITY OVERLAY --- */
+        #securityOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1565c0; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; font-weight: bold; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #fff; border-top: 4px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* --- HEADER FIXED --- */
+        .app-header {
+            position: fixed; top: 0; left: 0; width: 100%;
+            background: #1565c0; color: white;
+            height: 55px; padding: 0 15px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 1000; border-bottom: 3px solid #0d47a1;
+        }
+        .header-title { font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-back {
+            background: rgba(0,0,0,0.2); color: white; text-decoration: none;
+            padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: bold;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        /* --- FORM CARD --- */
+        .container { padding: 15px; max-width: 600px; margin: 0 auto; }
+        
+        .form-card {
+            background: #fff; padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid #bbdefb;
+            margin-bottom: 20px;
+        }
+        
+        .form-title {
+            margin: 0 0 15px 0; font-size: 14px; color: #1565c0;
+            font-weight: 800; border-bottom: 2px solid #f0f0f0; padding-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-size: 11px; font-weight: 700; color: #555; margin-bottom: 5px; text-transform: uppercase; }
+        
+        input, select {
+            width: 100%; padding: 12px;
+            border: 2px solid #e0e0e0; border-radius: 8px;
+            font-size: 14px; background: #fbfbfb;
+            transition: 0.2s; -webkit-appearance: none;
+        }
+        input:focus, select:focus { border-color: #2196f3; background: #fff; outline: none; }
+
+        /* --- BUTTONS --- */
+        .btn-action {
+            width: 100%; padding: 14px; border: none; border-radius: 8px;
+            font-weight: bold; font-size: 13px; color: white; cursor: pointer;
+            margin-top: 5px; text-transform: uppercase; box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+        }
+        .btn-save { background: #2e7d32; }
+        .btn-update { background: #f57f17; }
+        .btn-del { background: #c62828; margin-top: 10px; }
+        .btn-reset { background: #cfd8dc; color: #455a64; margin-top: 10px; border: 1px solid #b0bec5; box-shadow: none;}
+
+        /* --- LIST CARD USER --- */
+        .list-header { font-size: 12px; font-weight: bold; color: #666; margin-bottom: 10px; display: flex; justify-content: space-between; }
+        
+        .user-list { display: flex; flex-direction: column; gap: 10px; }
+
+        .user-item {
+            background: #fff; padding: 15px; border-radius: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid #e0e0e0; border-left: 5px solid #ccc;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+            transition: 0.1s; cursor: pointer;
+        }
+        .user-item:active { background: #f5f5f5; transform: scale(0.98); }
+
+        .user-info h4 { margin: 0; font-size: 15px; color: #333; }
+        .user-info p { margin: 4px 0 0; font-size: 12px; color: #777; font-family: monospace; }
+        
+        /* ROLE COLORS */
+        .role-master { border-left-color: #1565c0; }
+        .role-master .role-badge { background: #e3f2fd; color: #1565c0; }
+        
+        .role-user { border-left-color: #2e7d32; }
+        .role-user .role-badge { background: #e8f5e9; color: #2e7d32; }
+
+        .role-badge {
+            font-size: 10px; font-weight: 800; padding: 4px 8px;
+            border-radius: 4px; text-transform: uppercase;
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="securityOverlay">
+    <div class="spinner"></div>
+    <div>CHECKING ACCESS...</div>
+</div>
+
+<div class="app-header">
+    <div class="header-title">👥 User Manager</div>
+    <a href="dashboard_master.html" class="btn-back">Menu</a>
+</div>
+
+<div class="container" id="appContent" style="opacity:0; transition: opacity 0.5s;">
+    
+    <div class="form-card" id="formArea">
+        <h3 class="form-title">Input / Edit User</h3>
+        
+        <div class="input-group">
+            <label>NIK (8 Digit Angka)</label>
+            <input type="tel" id="inNik" maxlength="8" placeholder="Contoh: 24001234" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+        </div>
+
+        <div class="input-group">
+            <label>Nama Lengkap</label>
+            <input type="text" id="inNama" placeholder="Nama Karyawan" style="text-transform:uppercase;">
+        </div>
+
+        <div class="input-group">
+            <label>Jabatan (Role)</label>
+            <select id="inRole">
+                <option value="USER">Crew Store</option>
+                <option value="MASTER">Master Admin</option>
+            </select>
+        </div>
+
+        <button class="btn-action btn-save" id="btnSave" onclick="saveUser()">Simpan Data</button>
+        
+        <div id="editButtons" style="display:none;">
+            <button class="btn-action btn-del" onclick="deleteUser()">Hapus User</button>
+            <button class="btn-action btn-reset" onclick="resetForm()">Batal / Reset</button>
+        </div>
+    </div>
+
+    <div class="list-header">
+        <span>DAFTAR USER</span>
+        <span>Total: <b id="totalUser">0</b></span>
+    </div>
+
+    <div id="userListContainer" class="user-list">
+        <div style="text-align:center; padding:20px; color:#999; font-size:12px;">Memuat data...</div>
+    </div>
+
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, get, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCz55fYcd-WecBgw9ISF2XmlWpde8Z5IwU",
+        authDomain: "stockopname-54349.firebaseapp.com",
+        projectId: "stockopname-54349",
+        storageBucket: "stockopname-54349.firebasestorage.app",
+        messagingSenderId: "138553024724",
+        appId: "1:138553024724:web:8ea32c06d2bca888e4db41",
+        databaseURL: "https://stockopname-54349-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    let userList = [];
+    let isEditMode = false;
+
+    // --- 1. SECURITY CHECK ---
+    window.onload = function() {
+        const session = localStorage.getItem('so_session');
+        if (!session) { forceLogout(); return; }
+
+        const localUser = JSON.parse(session);
+        get(ref(db, 'users/' + localUser.nik)).then((snapshot) => {
+            const dbUser = snapshot.val();
+            if (dbUser && dbUser.role === 'MASTER') {
+                document.getElementById('securityOverlay').style.display = 'none';
+                document.getElementById('appContent').style.opacity = '1';
+            } else { forceLogout(); }
+        }).catch(() => forceLogout());
+    }
+
+    function forceLogout() { localStorage.removeItem('so_session'); window.location.replace("index.html"); }
+
+    // --- 2. LOAD DATA (LIST VIEW) ---
+    const userRef = ref(db, 'users');
+    onValue(userRef, (snapshot) => {
+        const data = snapshot.val();
+        userList = [];
+        const container = document.getElementById('userListContainer');
+        container.innerHTML = "";
+
+        if (data) {
+            Object.keys(data).forEach(key => userList.push(data[key]));
+            userList.sort((a, b) => a.nik - b.nik);
+
+            userList.forEach(u => {
+                let roleClass = u.role === 'MASTER' ? 'role-master' : 'role-user';
+                
+                let card = `
+                <div class="user-item ${roleClass}" onclick="window.selectUser('${u.nik}')">
+                    <div class="user-info">
+                        <h4>${u.nama}</h4>
+                        <p>ID: ${u.nik}</p>
+                    </div>
+                    <div class="role-badge">${u.role}</div>
+                </div>`;
+                container.innerHTML += card;
+            });
+        } else {
+            container.innerHTML = '<div style="text-align:center; padding:20px; color:#999; font-size:12px;">Data Kosong</div>';
+        }
+        document.getElementById('totalUser').innerText = userList.length;
+    });
+
+    // --- 3. CRUD LOGIC ---
+    window.saveUser = function() {
+        const nik = document.getElementById('inNik').value;
+        const nama = document.getElementById('inNama').value.toUpperCase();
+        const role = document.getElementById('inRole').value;
+
+        if(nik.length !== 8) return alert("NIK harus 8 digit.");
+        if(!nama) return alert("Nama wajib diisi.");
+        if(!isEditMode && userList.find(u => u.nik === nik)) return alert("NIK sudah terdaftar!");
+
+        set(ref(db, 'users/' + nik), {
+            nik: nik, nama: nama, role: role, password: nik
+        }).then(() => { alert("Berhasil Disimpan"); resetForm(); });
+    }
+
+    window.selectUser = function(nik) {
+        const u = userList.find(i => i.nik === nik);
+        if(u) {
+            // Isi Form
+            document.getElementById('inNik').value = u.nik;
+            document.getElementById('inNik').readOnly = true;
+            document.getElementById('inNama').value = u.nama;
+            document.getElementById('inRole').value = u.role;
+            
+            // Ubah Mode ke Edit
+            isEditMode = true;
+            const btn = document.getElementById('btnSave');
+            btn.innerText = "Update Data User";
+            btn.className = "btn-action btn-update";
+            
+            // Tampilkan tombol Hapus/Batal
+            document.getElementById('editButtons').style.display = 'block';
+
+            // Scroll ke Form (Smooth)
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+
+    window.deleteUser = function() {
+        if(confirm("Hapus user ini?")) {
+            remove(ref(db, 'users/' + document.getElementById('inNik').value))
+            .then(() => { alert("User Dihapus"); resetForm(); });
+        }
+    }
+
+    window.resetForm = function() {
+        document.getElementById('inNik').value = "";
+        document.getElementById('inNik').readOnly = false;
+        document.getElementById('inNama').value = "";
+        document.getElementById('inRole').value = "USER";
+        
+        isEditMode = false;
+        const btn = document.getElementById('btnSave');
+        btn.innerText = "Simpan Data";
+        btn.className = "btn-action btn-save";
+        
+        document.getElementById('editButtons').style.display = 'none';
+    }
+    
+    window.selectUser = window.selectUser;
+</script>
+
+</body>
+</html>

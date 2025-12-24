@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MASTER DATA PLU (SERVER)</title>
+    <style>
+        /* --- WINDOWS CLASSIC / .NET STYLE THEME --- */
+        body {
+            background-color: #d4d0c8;
+            font-family: 'Tahoma', 'Segoe UI', sans-serif;
+            font-size: 11px;
+            margin: 0; padding: 0;
+            height: 100vh; overflow: hidden;
+            user-select: none;
+        }
+
+        /* --- LAYOUT UTAMA --- */
+        .window-container {
+            display: flex; flex-direction: column;
+            height: 100vh; border: 1px solid #404040;
+        }
+
+        /* TITLE BAR */
+        .title-bar {
+            background: linear-gradient(to right, #000080, #1084d0);
+            color: white; padding: 4px 8px; font-weight: bold;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #fff;
+        }
+        .win-controls button {
+            width: 16px; height: 14px; font-size: 9px; line-height: 10px;
+            background: #d4d0c8; border: 1px outset #fff; cursor: pointer;
+        }
+
+        /* TOOLSTRIP */
+        .toolstrip {
+            background: #d4d0c8; padding: 5px;
+            border-bottom: 1px solid #808080;
+            display: flex; gap: 5px; align-items: center;
+        }
+
+        .btn-win {
+            background: #d4d0c8; color: black;
+            border: 1px solid #404040;
+            border-top: 1px solid #fff; border-left: 1px solid #fff;
+            border-right: 1px solid #404040; border-bottom: 1px solid #404040;
+            padding: 4px 12px; cursor: pointer; font-family: 'Tahoma'; font-size: 11px;
+        }
+        .btn-win:active {
+            border: 1px solid #fff;
+            border-top: 1px solid #404040; border-left: 1px solid #404040;
+        }
+        .input-win {
+            border: 1px solid #fff;
+            border-top: 1px solid #404040; border-left: 1px solid #404040;
+            padding: 3px; font-family: 'Tahoma'; font-size: 11px;
+            background: white; outline: none;
+        }
+
+        /* GRID AREA */
+        .grid-panel {
+            flex: 1; background: #808080;
+            padding: 1px; overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+        
+        .grid-header {
+            background: #d4d0c8; border-bottom: 1px solid #000;
+            display: grid; padding-right: 17px; font-weight: bold;
+        }
+        .grid-header div {
+            padding: 4px; border-right: 1px solid #808080;
+            border-top: 1px solid #fff; border-left: 1px solid #fff;
+            background: #d4d0c8; overflow: hidden; white-space: nowrap;
+        }
+
+        .grid-body { flex: 1; overflow-y: scroll; background: white; }
+        .grid-row { display: grid; border-bottom: 1px solid #e0e0e0; cursor: default; }
+        .grid-row:hover { background-color: #ffffcc; }
+        .grid-row div {
+            padding: 3px 4px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+            border-right: 1px solid #eee;
+        }
+        
+        .g-col-no { width: 40px; }
+        .g-col-rak { width: 60px; text-align: center; }
+        .g-col-plu { width: 100px; font-weight: bold; }
+        .g-col-nama { flex: 1; }
+        .g-col-harga { width: 80px; text-align: right; }
+
+        /* STATUS STRIP */
+        .status-strip {
+            background: #d4d0c8; border-top: 1px solid #fff;
+            padding: 2px; display: flex; gap: 2px;
+        }
+        .status-panel {
+            border: 1px solid #fff;
+            border-top: 1px solid #808080; border-left: 1px solid #808080;
+            padding: 2px 5px; background: #d4d0c8;
+        }
+
+        /* --- MODAL STYLE (SIMPLE WINDOWS) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4); z-index: 999; display: none;
+            align-items: center; justify-content: center;
+        }
+        .modal-win {
+            background: #d4d0c8; border: 2px outset #fff;
+            width: 400px; box-shadow: 3px 3px 10px rgba(0,0,0,0.5);
+        }
+        .modal-body { padding: 15px; }
+
+        /* --- NEW LOADING STYLE (SIMPLE BOX) --- */
+        .load-box {
+            width: 280px; text-align: center; padding: 20px;
+            background: #d4d0c8; border: 2px outset #fff;
+        }
+        
+        /* SPINNER MEMUTAR */
+        .loading-spinner {
+            width: 30px; height: 30px; border: 4px solid #aaa;
+            border-top: 4px solid #000080; border-radius: 50%;
+            animation: spin 1s linear infinite; margin: 0 auto 15px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* CEKLIS HIJAU (HIDDEN AWALNYA) */
+        .success-mark {
+            font-size: 40px; color: #008000; font-weight: bold;
+            display: none; margin-bottom: 10px;
+        }
+
+        /* TEXT 1 BARIS BERJALAN */
+        .one-line-log {
+            font-family: 'Consolas', monospace; font-size: 10px; color: #555;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            border: 1px inset #fff; background: #fff; padding: 2px 5px;
+            width: 100%; text-align: left;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="window-container">
+    <div class="title-bar">
+        <span>Server Master Data (PLU) - Administrator Mode</span>
+        <div class="win-controls">
+            <button onclick="location.href='general.html'">X</button>
+        </div>
+    </div>
+
+    <div class="toolstrip">
+        <label>Filter:</label>
+        <select id="rakFilter" class="input-win" style="width: 80px;" onchange="renderGrid()">
+            <option value="ALL">ALL RAK</option>
+        </select>
+        <input type="text" id="searchInput" class="input-win" placeholder="Cari PLU/Nama..." style="width: 150px;" onkeyup="renderGrid()">
+        
+        <div style="border-left: 1px solid #808080; border-right: 1px solid #fff; height: 18px; margin: 0 5px;"></div>
+
+        <button class="btn-win" onclick="openAddModal()">➕ Baru (F2)</button>
+        <button class="btn-win" onclick="location.reload()">🔄 Refresh (F5)</button>
+        
+        <div style="border-left: 1px solid #808080; border-right: 1px solid #fff; height: 18px; margin: 0 5px;"></div>
+
+        <button class="btn-win" onclick="window.location.href='input_produk.html'">
+            📂 <b>Import JSON</b>
+        </button>
+    </div>
+
+    <div class="grid-panel">
+        <div class="grid-header" style="display: flex;">
+            <div class="g-col-no">No</div>
+            <div class="g-col-rak">Rak</div>
+            <div class="g-col-plu">PLU</div>
+            <div class="g-col-nama">Deskripsi Barang</div>
+            <div class="g-col-harga">Harga</div>
+        </div>
+        <div class="grid-body" id="gridBody"></div>
+    </div>
+
+    <div class="status-strip">
+        <div class="status-panel" style="width: 150px;">Rows: <span id="rowCount">0</span></div>
+        <div class="status-panel" style="flex: 1;">Status: <span id="statusMsg">Connecting...</span></div>
+        <div class="status-panel" style="width: 100px;">DB: Online</div>
+    </div>
+</div>
+
+<div id="addModal" class="modal-overlay">
+    <div class="modal-win">
+        <div class="title-bar" style="padding: 3px;">
+            <span>Add New Record</span>
+            <button onclick="closeAddModal()" style="color:black; background:#d4d0c8;">X</button>
+        </div>
+        <div class="modal-body">
+            <table width="100%">
+                <tr><td>RAK:</td><td><input type="text" id="inRak" class="input-win" style="width:100%"></td></tr>
+                <tr><td>PLU:</td><td><input type="number" id="inPlu" class="input-win" style="width:100%"></td></tr>
+                <tr><td>NAMA:</td><td><input type="text" id="inNama" class="input-win" style="width:100%"></td></tr>
+                <tr><td>HARGA:</td><td><input type="number" id="inHarga" class="input-win" style="width:100%"></td></tr>
+            </table>
+            <div style="margin-top: 15px; text-align: right;">
+                <button class="btn-win" onclick="saveManual()">Save Record</button>
+                <button class="btn-win" onclick="closeAddModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="loadingModal" class="modal-overlay" style="display: flex;">
+    <div class="load-box">
+        <div style="font-weight:bold; margin-bottom:15px; color:#000080;">Load Data...</div>
+        
+        <div id="loadingArea">
+            <div class="loading-spinner"></div>
+            <div id="pathLog" class="one-line-log">Initializing...</div>
+        </div>
+
+        <div id="successArea" style="display:none;">
+            <div class="success-mark">✔</div>
+            <div style="font-size:11px; font-weight:bold;">DATA LOADED</div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, onValue, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCz55fYcd-WecBgw9ISF2XmlWpde8Z5IwU",
+        authDomain: "stockopname-54349.firebaseapp.com",
+        projectId: "stockopname-54349",
+        storageBucket: "stockopname-54349.firebasestorage.app",
+        messagingSenderId: "138553024724",
+        appId: "1:138553024724:web:8ea32c06d2bca888e4db41",
+        databaseURL: "https://stockopname-54349-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    let fullData = [];
+    let logInterval;
+
+    // --- 1. SIMULASI LOADING 1 BARIS ---
+    function startSimpleLoad() {
+        const paths = [
+            "C:\\System\\Drivers\\etc...", "Reading Index Table 0x4F...",
+            "Connecting to 192.168.1.10...", "Fetching records...",
+            "Verifying Integrity...", "Loading Cache...",
+            "C:\\Windows\\System32\\config...", "Mounting DB..."
+        ];
+        const el = document.getElementById('pathLog');
+        
+        logInterval = setInterval(() => {
+            const rand = paths[Math.floor(Math.random() * paths.length)];
+            el.innerText = rand;
+        }, 150);
+    }
+
+    function finishSimpleLoad() {
+        clearInterval(logInterval);
+        
+        // Ubah Tampilan jadi Centang Hijau
+        document.getElementById('loadingArea').style.display = 'none';
+        document.getElementById('successArea').style.display = 'block';
+
+        // Tutup otomatis setelah 1 detik
+        setTimeout(() => {
+            document.getElementById('loadingModal').style.display = 'none';
+        }, 1000);
+    }
+
+    // --- 2. LOAD DATA ---
+    window.onload = function() {
+        startSimpleLoad(); // Mulai animasi
+        document.getElementById('statusMsg').innerText = "Syncing...";
+        
+        onValue(ref(db, 'stok_opname'), (snapshot) => {
+            fullData = [];
+            const data = snapshot.val();
+            if(data) {
+                Object.values(data).forEach(d => fullData.push(d));
+                fullData.sort((a,b) => (a.nama > b.nama) ? 1 : -1);
+            }
+            updateRakList();
+            renderGrid();
+            document.getElementById('statusMsg').innerText = "Ready.";
+            
+            // Selesai Load
+            finishSimpleLoad();
+        });
+    }
+
+    // --- 3. RENDER GRID ---
+    window.renderGrid = function() {
+        const txt = document.getElementById('searchInput').value.toUpperCase();
+        const rak = document.getElementById('rakFilter').value;
+        const body = document.getElementById('gridBody');
+        
+        let html = "";
+        const filtered = fullData.filter(d => {
+            const matchTxt = d.nama.includes(txt) || String(d.plu).includes(txt);
+            const matchRak = rak === 'ALL' || d.rak === rak;
+            return matchTxt && matchRak;
+        });
+
+        const limit = filtered.length > 300 ? 300 : filtered.length;
+
+        for(let i=0; i<limit; i++) {
+            const d = filtered[i];
+            const bg = (i % 2 === 0) ? '#fff' : '#f0f0f0';
+            html += `
+                <div class="grid-row" style="display:flex; background:${bg};">
+                    <div class="g-col-no" style="width:40px; padding:3px; border-right:1px solid #ccc;">${i+1}</div>
+                    <div class="g-col-rak" style="width:60px; padding:3px; border-right:1px solid #ccc; text-align:center;">${d.rak}</div>
+                    <div class="g-col-plu" style="width:100px; padding:3px; border-right:1px solid #ccc; font-weight:bold;">${d.plu}</div>
+                    <div class="g-col-nama" style="flex:1; padding:3px; border-right:1px solid #ccc;">${d.nama}</div>
+                    <div class="g-col-harga" style="width:80px; padding:3px; text-align:right;">${parseInt(d.harga).toLocaleString()}</div>
+                </div>
+            `;
+        }
+
+        if(filtered.length === 0) html = '<div style="padding:20px; text-align:center; color:red;">No Records Found</div>';
+        body.innerHTML = html;
+        document.getElementById('rowCount').innerText = filtered.length;
+    }
+
+    function updateRakList() {
+        const raks = [...new Set(fullData.map(d => d.rak))].sort();
+        const sel = document.getElementById('rakFilter');
+        const current = sel.value;
+        sel.innerHTML = '<option value="ALL">ALL RAK</option>';
+        raks.forEach(r => {
+            const opt = document.createElement('option');
+            opt.value = r; opt.text = "RAK " + r;
+            sel.appendChild(opt);
+        });
+        sel.value = current;
+    }
+
+    // --- 4. MANUAL ADD (CEGAH DOUBLE PLU) ---
+    window.openAddModal = () => document.getElementById('addModal').style.display = 'flex';
+    window.closeAddModal = () => document.getElementById('addModal').style.display = 'none';
+
+    window.saveManual = function() {
+        const rak = document.getElementById('inRak').value.toUpperCase();
+        const plu = document.getElementById('inPlu').value.trim();
+        const nama = document.getElementById('inNama').value.toUpperCase();
+        const harga = document.getElementById('inHarga').value;
+
+        if(!plu || !nama) return alert("PLU & Nama Wajib isi!");
+
+        // CEK DUPLIKAT PLU
+        const exists = fullData.some(d => String(d.plu) === String(plu));
+        if (exists) {
+            alert("⚠️ ERROR: PLU " + plu + " SUDAH ADA DI DATABASE!\n\nTidak boleh ada PLU kembar.");
+            return; // STOP
+        }
+
+        push(ref(db, 'stok_opname'), {
+            plu: String(plu), nama: nama, harga: parseInt(harga)||0, rak: rak,
+            tanggal_input: new Date().toISOString()
+        }).then(() => {
+            alert("Record Saved Successfully.");
+            closeAddModal();
+            document.getElementById('inPlu').value = "";
+            document.getElementById('inNama').value = "";
+            document.getElementById('inHarga').value = "";
+        });
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1565c0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LAPORAN HASIL SO</title>
+    <style>
+        /* --- INDUSTRIAL BLUE THEME --- */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            margin: 0; padding: 0;
+            background-color: #e3f2fd;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333; padding-bottom: 50px;
+        }
+
+        /* HEADER */
+        .app-header {
+            background: #1565c0; color: white; padding: 0 20px; height: 55px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 4px solid #0d47a1; flex-shrink: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .header-title { font-size: 16px; font-weight: 800; text-transform: uppercase; }
+        .btn-back {
+            background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.3);
+            color: white; text-decoration: none; padding: 5px 15px; border-radius: 4px;
+            font-size: 11px; font-weight: bold;
+        }
+
+        /* CONTAINER */
+        .container { padding: 20px; max-width: 800px; margin: 0 auto; }
+
+        /* FILTER BAR (NEW) */
+        .filter-bar {
+            background: white; padding: 15px; border-radius: 8px;
+            border: 1px solid #90a4ae; border-bottom: 3px solid #546e7a;
+            margin-bottom: 20px; display: flex; gap: 10px; align-items: center;
+        }
+        .date-input {
+            flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px;
+            font-family: inherit; font-weight: bold; color: #333;
+        }
+        .btn-reset {
+            padding: 8px 15px; background: #eceff1; border: 1px solid #cfd8dc;
+            border-radius: 4px; cursor: pointer; font-weight: bold; color: #546e7a;
+        }
+
+        /* LIST CARD (RIWAYAT) */
+        .report-card {
+            background: white; border-radius: 8px; padding: 15px;
+            border: 1px solid #ccc; border-left: 5px solid #1565c0;
+            margin-bottom: 10px; cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .report-card:hover { transform: translateX(5px); }
+        .card-title { font-weight: bold; color: #1565c0; font-size: 14px; margin-bottom: 5px; }
+        .card-info { font-size: 11px; color: #666; }
+        .card-badge { 
+            background: #e3f2fd; color: #1565c0; padding: 4px 8px; 
+            border-radius: 4px; font-size: 10px; font-weight:bold; 
+        }
+
+        /* --- DETAIL VIEW (KERTAS LAPORAN) --- */
+        #detailView { display: none; background: white; padding: 30px; border-radius: 4px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        
+        .report-header {
+            margin-bottom: 20px; border-bottom: 2px dashed #ccc; padding-bottom: 15px;
+        }
+        .rh-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 12px; }
+        .rh-label { font-weight: bold; color: #555; }
+        .rh-val { font-weight: bold; color: #000; text-transform: uppercase; }
+
+        /* --- TABEL SEDERHANA --- */
+        .simple-table {
+            width: 100%; border-collapse: collapse; font-size: 11px;
+        }
+        .simple-table thead th {
+            border-top: 2px solid #333; border-bottom: 2px solid #333;
+            padding: 8px 5px; text-align: right; font-weight: 800; color: #000;
+        }
+        .simple-table thead th:first-child { text-align: left; }
+        .simple-table tbody td {
+            padding: 6px 5px; border: none; color: #444; vertical-align: top;
+        }
+        .simple-table tbody tr:nth-child(even) { background: #fafafa; }
+        .simple-table tfoot td {
+            border-top: 2px solid #333; border-bottom: 2px solid #333;
+            padding: 10px 5px; font-weight: 900; font-size: 12px; text-align: right;
+        }
+
+        .red { color: #c62828; }
+        .green { color: #2e7d32; }
+
+        /* PRINT BUTTON */
+        .fab-print {
+            position: fixed; bottom: 20px; right: 20px;
+            background: #f57f17; color: white; width: 50px; height: 50px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            cursor: pointer; border: none; z-index: 99;
+        }
+
+        /* PRINT MODE */
+        @media print {
+            .app-header, .fab-print, .btn-back, .no-print { display: none !important; }
+            body { background: white; padding: 0; }
+            .container { max-width: 100%; padding: 0; margin: 0; }
+            #detailView { box-shadow: none; padding: 0; display: block !important; }
+            #listView { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-header">
+    <div class="header-title">📂 ARSIP LAPORAN</div>
+    <a href="#" onclick="goBack()" class="btn-back">KEMBALI</a>
+</div>
+
+<div class="container">
+    
+    <div id="listView">
+        
+        <div class="filter-bar">
+            <span style="font-size:12px; font-weight:bold; color:#555;">📅 FILTER TANGGAL:</span>
+            <input type="date" id="dateFilter" class="date-input" onchange="applyFilter()">
+            <button class="btn-reset" onclick="resetFilter()">RESET</button>
+        </div>
+
+        <h3 style="margin-top:0; color:#1565c0; border-bottom:1px solid #ddd; padding-bottom:10px;">RIWAYAT STOCK OPNAME</h3>
+        <div id="reportList">
+            <div style="text-align:center; padding:30px; color:#999;">Memuat Data...</div>
+        </div>
+    </div>
+
+    <div id="detailView">
+        <button onclick="closeDetail()" style="margin-bottom:15px; cursor:pointer; background:#eee; border:none; padding:5px 10px; border-radius:4px; font-size:10px;" class="no-print">⬅ KEMBALI KE LIST</button>
+        
+        <div class="report-header">
+            <h2 style="text-align:center; margin:0 0 20px 0; color:#000;">LAPORAN HASIL SO</h2>
+            
+            <div class="rh-row">
+                <span class="rh-label">NAMA USER SO:</span>
+                <span class="rh-val" id="dUser">-</span>
+            </div>
+            <div class="rh-row">
+                <span class="rh-label">JENIS SO:</span>
+                <span class="rh-val" id="dCat">-</span>
+            </div>
+            <div class="rh-row">
+                <span class="rh-label">TGL SELESAI:</span>
+                <span class="rh-val" id="dDate">-</span>
+            </div>
+            <div class="rh-row">
+                <span class="rh-label">SHIFT SO:</span>
+                <span class="rh-val" id="dShift">-</span>
+            </div>
+        </div>
+
+        <table class="simple-table">
+            <thead>
+                <tr>
+                    <th width="40%">ITEM / PLU</th>
+                    <th width="15%">OH</th>
+                    <th width="15%">FISIK</th>
+                    <th width="15%">DIFF</th>
+                    <th width="15%">RP</th>
+                </tr>
+            </thead>
+            <tbody id="detailBody">
+                </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3">TOTAL SELISIH:</td>
+                    <td id="tDiffQty">0</td>
+                    <td id="tDiffRp">Rp 0</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div style="margin-top:40px; display:flex; justify-content:space-between; text-align:center; font-size:10px;">
+            <div style="width:100px;">
+                Dibuat,<br><br><br>( ................. )
+            </div>
+            <div style="width:100px;">
+                Disetujui,<br><br><br>( ................. )
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<button id="btnPrint" class="fab-print" onclick="window.print()" style="display:none;">🖨️</button>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCz55fYcd-WecBgw9ISF2XmlWpde8Z5IwU",
+        authDomain: "stockopname-54349.firebaseapp.com",
+        projectId: "stockopname-54349",
+        storageBucket: "stockopname-54349.firebasestorage.app",
+        messagingSenderId: "138553024724",
+        appId: "1:138553024724:web:8ea32c06d2bca888e4db41",
+        databaseURL: "https://stockopname-54349-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let priceMap = new Map();
+    let globalReports = []; // Simpan data untuk filtering
+
+    // --- 1. INIT ---
+    window.onload = function() {
+        const session = localStorage.getItem('so_session');
+        if(!session) { window.location.href='index.html'; return; }
+
+        // Load Master Harga
+        get(ref(db, 'stok_opname')).then(snap => {
+            const m = snap.val();
+            if(m) Object.values(m).forEach(i => priceMap.set(String(i.plu), parseInt(i.harga)||0));
+            loadHistory();
+        });
+    }
+
+    window.goBack = function() {
+        const session = localStorage.getItem('so_session');
+        if(session) {
+            const u = JSON.parse(session);
+            if(u.role === 'MASTER') window.location.href = 'dashboard_master.html';
+            else window.location.href = 'dashboard_user.html';
+        } else {
+            window.location.href = 'index.html';
+        }
+    }
+
+    // --- 2. LOAD DATA ---
+    function loadHistory() {
+        onValue(ref(db, 'riwayat_so'), (snapshot) => {
+            const data = snapshot.val();
+            if(!data) {
+                globalReports = [];
+                renderReports([]);
+                return;
+            }
+
+            // Convert ke Array & Sort Descending
+            globalReports = Object.entries(data).map(([key, val]) => ({ id: key, ...val }));
+            globalReports.sort((a, b) => new Date(b.selesai_pada) - new Date(a.selesai_pada));
+
+            renderReports(globalReports);
+        });
+    }
+
+    // --- 3. RENDER LIST ---
+    function renderReports(reports) {
+        const listDiv = document.getElementById('reportList');
+        listDiv.innerHTML = "";
+        
+        if(reports.length === 0) {
+            listDiv.innerHTML = '<div style="text-align:center; padding:30px; color:#aaa;">Data tidak ditemukan.</div>';
+            return;
+        }
+
+        reports.forEach(r => {
+            const dateObj = new Date(r.selesai_pada);
+            const dateStr = dateObj.toLocaleDateString('id-ID', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+            const timeStr = dateObj.toLocaleTimeString('id-ID');
+
+            const div = document.createElement('div');
+            div.className = "report-card";
+            div.onclick = () => showDetail(r);
+            div.innerHTML = `
+                <div>
+                    <div class="card-title">${r.kategori} <span style="font-size:10px; color:#777; font-weight:normal;">(${timeStr})</span></div>
+                    <div class="card-info">
+                        User: <b>${r.user}</b> | Shift: <b>${r.shift}</b><br>
+                        ${dateStr}
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:10px; color:#666; margin-bottom:5px;">Total Selisih</div>
+                    <span class="card-badge">${r.total_variance_rp}</span>
+                </div>
+            `;
+            listDiv.appendChild(div);
+        });
+    }
+
+    // --- 4. FILTER LOGIC ---
+    window.applyFilter = function() {
+        const inputDate = document.getElementById('dateFilter').value;
+        if(!inputDate) {
+            renderReports(globalReports); // Tampilkan semua jika kosong
+            return;
+        }
+
+        // Filter: Bandingkan string YYYY-MM-DD
+        const filtered = globalReports.filter(r => {
+            const rDate = new Date(r.selesai_pada).toISOString().split('T')[0];
+            return rDate === inputDate;
+        });
+
+        renderReports(filtered);
+    }
+
+    window.resetFilter = function() {
+        document.getElementById('dateFilter').value = "";
+        renderReports(globalReports);
+    }
+
+    // --- 5. SHOW DETAIL ---
+    window.showDetail = function(data) {
+        document.getElementById('listView').style.display = 'none';
+        document.getElementById('detailView').style.display = 'block';
+        document.getElementById('btnPrint').style.display = 'flex';
+
+        // Header Data
+        document.getElementById('dUser').innerText = data.user;
+        document.getElementById('dCat').innerText = data.kategori;
+        document.getElementById('dShift').innerText = data.shift;
+        document.getElementById('dDate').innerText = new Date(data.selesai_pada).toLocaleString('id-ID');
+
+        // Table Data
+        const tbody = document.getElementById('detailBody');
+        tbody.innerHTML = "";
+        
+        let totalDiffQty = 0;
+        let totalDiffRp = 0;
+
+        if(data.items) {
+            data.items.forEach(item => {
+                const sis = parseInt(item.qty_sis) || 0;
+                const fisik = parseInt(item.qty_fisik) || 0;
+                const diff = fisik - sis;
+                
+                const price = priceMap.get(String(item.plu)) || 0;
+                const val = diff * price;
+
+                totalDiffQty += diff;
+                totalDiffRp += val;
+
+                const colorClass = diff < 0 ? 'red' : (diff > 0 ? 'green' : '');
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>
+                            <b>${item.nama}</b><br>
+                            <span style="font-size:9px; color:#666;">${item.plu}</span>
+                        </td>
+                        <td align="right">${sis}</td>
+                        <td align="right">${fisik}</td>
+                        <td align="right" class="${colorClass}">${diff > 0 ? '+'+diff : diff}</td>
+                        <td align="right" class="${colorClass}">${val.toLocaleString('id-ID')}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Footer Total
+        const tQty = document.getElementById('tDiffQty');
+        const tRp = document.getElementById('tDiffRp');
+        
+        tQty.innerText = totalDiffQty > 0 ? '+'+totalDiffQty : totalDiffQty;
+        tQty.className = totalDiffQty < 0 ? 'red' : (totalDiffQty > 0 ? 'green' : '');
+        
+        tRp.innerText = "Rp " + totalDiffRp.toLocaleString('id-ID');
+        tRp.className = totalDiffRp < 0 ? 'red' : (totalDiffRp > 0 ? 'green' : '');
+    }
+
+    window.closeDetail = function() {
+        document.getElementById('listView').style.display = 'block';
+        document.getElementById('detailView').style.display = 'none';
+        document.getElementById('btnPrint').style.display = 'none';
+    }
+
+    window.goBack = window.goBack;
+    window.applyFilter = window.applyFilter;
+    window.resetFilter = window.resetFilter;
+    window.showDetail = window.showDetail;
+    window.closeDetail = window.closeDetail;
+</script>
+
+</body>
+</html>

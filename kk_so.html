@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1565c0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KK SO - PENGHITUNGAN</title>
+    <style>
+        /* --- STYLE INDUSTRIAL BLUE --- */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            margin: 0; padding: 0;
+            background-color: #e3f2fd;
+            font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;
+            color: #333; padding-bottom: 120px;
+        }
+
+        /* HEADER INFO */
+        .header-info {
+            background: #1565c0; color: white; padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 12px; }
+        .info-val { font-weight: bold; text-transform: uppercase; }
+        .shift-badge { background: #f57f17; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10px; }
+
+        /* LIST ITEM */
+        .container { padding: 10px; }
+        .item-card {
+            background: white; border-radius: 8px; padding: 12px;
+            margin-bottom: 10px; border: 1px solid #cfd8dc;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; transition: 0.1s;
+        }
+        .item-card:active { background: #e3f2fd; transform: scale(0.98); }
+        
+        .item-left { flex: 1; }
+        .plu { font-size: 10px; font-family: monospace; color: #78909c; font-weight: bold; }
+        .name { font-size: 13px; font-weight: 700; color: #37474f; margin: 2px 0; }
+        
+        .qty-box {
+            text-align: center; min-width: 60px;
+            background: #eceff1; padding: 5px; border-radius: 6px; border: 1px solid #b0bec5;
+        }
+        .qty-label { font-size: 9px; color: #546e7a; font-weight: bold; }
+        .qty-val { font-size: 18px; font-weight: 900; color: #1565c0; }
+
+        /* SELISIH AREA */
+        .variance-details {
+            display: none; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #ccc;
+            font-size: 11px; display: flex; justify-content: space-between;
+        }
+        .red { color: #c62828; }
+        .green { color: #2e7d32; }
+
+        /* FOOTER */
+        .footer-bar {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: white; padding: 10px; border-top: 2px solid #1565c0;
+            z-index: 99; display: flex; flex-direction: column; gap: 10px;
+        }
+        .summary-row { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; }
+        .btn-group { display: flex; gap: 10px; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; }
+        .btn-show { background: #f57f17; color: white; }
+        .btn-finish { background: #1565c0; color: white; }
+
+        /* MODAL POPUP */
+        #inputModal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 2000;
+            display: none; justify-content: center; align-items: center;
+        }
+        .modal-card {
+            background: white; width: 90%; max-width: 320px;
+            padding: 20px; border-radius: 12px; text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        .modal-title { font-size: 14px; font-weight: bold; margin-bottom: 5px; color: #555; }
+        
+        .current-stat { font-size: 12px; color: #777; margin-bottom: 15px; background: #eee; padding: 5px; border-radius: 4px; }
+
+        /* --- FIX TAMPILAN STEPPER (TOMBOL KIRI KANAN) --- */
+        .stepper-wrapper {
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .btn-step {
+            width: 50px; 
+            height: 50px; 
+            border-radius: 8px; 
+            border: 1px solid #ccc;
+            background: #f5f5f5; 
+            font-size: 20px; 
+            cursor: pointer;
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            /* PENTING: Mencegah tombol mengecil/hilang */
+            flex-shrink: 0; 
+            user-select: none;
+        }
+        .btn-step:active { background: #e0e0e0; transform: scale(0.95); }
+
+        .big-input {
+            flex: 1; /* Mengisi sisa ruang */
+            width: 100%; /* Agar responsif */
+            min-width: 0; /* PENTING: Mencegah input mendorong elemen lain */
+            height: 50px; 
+            font-size: 30px; 
+            text-align: center;
+            border: 2px solid #1565c0; 
+            border-radius: 8px;
+            font-weight: bold; 
+            color: #333; 
+            outline: none;
+            padding: 0;
+        }
+        
+        .modal-btn-group { display: flex; gap: 10px; margin-bottom: 10px; }
+        .btn-modal { flex: 1; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
+        
+        .btn-add { background: #2e7d32; color: white; box-shadow: 0 4px 0 #1b5e20; } 
+        .btn-add:active { transform: translateY(4px); box-shadow: none; }
+        
+        .btn-reset { background: #c62828; color: white; box-shadow: 0 4px 0 #b71c1c; } 
+        .btn-reset:active { transform: translateY(4px); box-shadow: none; }
+        
+        .btn-close { background: #cfd8dc; color: #333; width: 100%; padding: 10px; margin-top: 5px; }
+
+        /* PRINT STYLE */
+        @media print {
+            body * { visibility: hidden; }
+            #printArea, #printArea * { visibility: visible; }
+            #printArea { position: absolute; left: 0; top: 0; width: 100%; }
+            .no-print { display: none; }
+        }
+        #printArea { display: none; font-family: monospace; padding: 20px; }
+        .print-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+        .print-table th { border-bottom: 1px dashed #000; text-align: right; }
+        .print-table th:first-child { text-align: left; }
+        .print-table td { padding: 4px 0; text-align: right; }
+        .print-table td:first-child { text-align: left; }
+
+    </style>
+</head>
+<body>
+
+<div class="header-info no-print">
+    <div class="info-row">
+        <span>USER: <span id="dispUser" class="info-val">...</span></span>
+        <span>SHIFT: <span id="dispShift" class="shift-badge">...</span></span>
+    </div>
+    <div class="info-row" style="margin-bottom:0;">
+        <span>JENIS: <span id="dispCat" class="info-val">...</span></span>
+        <span id="dispDate">...</span>
+    </div>
+</div>
+
+<div class="container no-print" id="itemContainer">
+    <div style="text-align:center; padding:30px;">Memuat Data...</div>
+</div>
+
+<div class="footer-bar no-print">
+    <div class="summary-row" id="summaryArea" style="display:none;">
+        <span>TOTAL VARIANCE:</span>
+        <span id="totalVariance" class="red">Rp 0</span>
+    </div>
+    <div class="btn-group">
+        <button class="btn btn-show" onclick="toggleVariance()">👁️ LIHAT SELISIH</button>
+        <button class="btn btn-finish" onclick="finishSO()">💾 SELESAI & CETAK</button>
+    </div>
+</div>
+
+<div id="inputModal" class="no-print">
+    <div class="modal-card">
+        <div class="modal-title" id="modalItemName">NAMA BARANG</div>
+        <div class="current-stat">Total Saat Ini: <b id="currentCount" style="color:#1565c0; font-size:14px;">0</b></div>
+        
+        <div class="stepper-wrapper">
+            <button class="btn-step" onclick="adjustInput(-1)">◀️</button>
+            <input type="number" id="inputQty" class="big-input" placeholder="0">
+            <button class="btn-step" onclick="adjustInput(1)">▶️</button>
+        </div>
+        
+        <div class="modal-btn-group">
+            <button class="btn-modal btn-reset" onclick="submitQty('RESET')">↺ RESET (0)</button>
+            <button class="btn-modal btn-add" onclick="submitQty('ADD')">+ TAMBAH</button>
+        </div>
+        <button class="btn-modal btn-close" onclick="closeModal()">BATAL / TUTUP</button>
+    </div>
+</div>
+
+<div id="printArea">
+    <div style="text-align:center; border-bottom:1px dashed #000; padding-bottom:10px; margin-bottom:10px;">
+        <h3 style="margin:0;">HASIL STOCK OPNAME</h3>
+        <p style="margin:5px 0;" id="printStoreName">TOKO: ALFAMART</p>
+        <p style="font-size:10px; margin:0;">
+            User: <span id="pUser"></span> | Shift: <span id="pShift"></span><br>
+            <span id="pCat"></span> | <span id="pDate"></span>
+        </p>
+    </div>
+    <table class="print-table">
+        <thead>
+            <tr>
+                <th>ITEM</th>
+                <th>OH</th>
+                <th>FISIK</th>
+                <th>DIFF</th>
+            </tr>
+        </thead>
+        <tbody id="printBody"></tbody>
+    </table>
+    <div style="text-align:right; border-top:1px dashed #000; margin-top:10px; padding-top:5px; font-weight:bold;">
+        TOTAL SELISIH: <span id="pTotalRp">0</span>
+    </div>
+    <br>
+    <div style="text-align:center; font-size:10px; margin-top:20px;">
+        ( Tanda Tangan Crew )
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, get, set, remove, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCz55fYcd-WecBgw9ISF2XmlWpde8Z5IwU",
+        authDomain: "stockopname-54349.firebaseapp.com",
+        projectId: "stockopname-54349",
+        storageBucket: "stockopname-54349.firebasestorage.app",
+        messagingSenderId: "138553024724",
+        appId: "1:138553024724:web:8ea32c06d2bca888e4db41",
+        databaseURL: "https://stockopname-54349-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let sessionData = null;
+    let masterPriceMap = new Map();
+    let currentShift = "";
+    let activeIndex = null;
+    let isVarianceShown = false;
+
+    // --- 1. INIT ---
+    window.onload = function() {
+        // Anti Back Button
+        history.pushState(null, null, location.href);
+        window.onpopstate = function () { history.go(1); };
+
+        const session = localStorage.getItem('so_session');
+        if (!session) { window.location.href = 'index.html'; return; }
+        const u = JSON.parse(session);
+
+        // Shift Auto
+        const h = new Date().getHours();
+        if (h >= 6 && h < 15) currentShift = "1 (PAGI)";
+        else if (h >= 15 && h < 22) currentShift = "2 (SIANG)";
+        else currentShift = "3 (MALAM)";
+
+        document.getElementById('dispUser').innerText = u.nama;
+        document.getElementById('dispShift').innerText = currentShift;
+        document.getElementById('dispDate').innerText = new Date().toLocaleDateString('id-ID');
+
+        loadSession(u.nik);
+    }
+
+    function loadSession(nik) {
+        get(ref(db, 'session_so/' + nik)).then((snap) => {
+            sessionData = snap.val();
+            if (!sessionData) { alert("Tidak ada  data SO."); window.location.href = 'so.html'; return; }
+            
+            document.getElementById('dispCat').innerText = sessionData.kategori;
+            
+            // Load Harga Master
+            get(ref(db, 'stok_opname')).then((mSnap) => {
+                const master = mSnap.val();
+                if(master) Object.values(master).forEach(m => masterPriceMap.set(String(m.plu), parseInt(m.harga)||0));
+                renderTable();
+            });
+        });
+    }
+
+    // --- 2. RENDER TABLE ---
+    function renderTable() {
+        const div = document.getElementById('itemContainer');
+        div.innerHTML = "";
+        
+        // Init qty_fisik jika null
+        if (!sessionData.items[0].hasOwnProperty('qty_fisik')) sessionData.items.forEach(i => i.qty_fisik = 0);
+
+        sessionData.items.forEach((item, idx) => {
+            const price = masterPriceMap.get(String(item.plu)) || 0;
+            const diff = item.qty_fisik - item.qty_sis;
+            const diffRp = diff * price;
+            
+            // Variance Style
+            const varStyle = isVarianceShown ? 'flex' : 'none';
+            const color = diffRp < 0 ? 'red' : (diffRp > 0 ? 'green' : '');
+
+            div.innerHTML += `
+            <div class="item-card" onclick="openModal(${idx})">
+                <div class="item-left">
+                    <div class="plu">${item.plu}</div>
+                    <div class="name">${item.nama}</div>
+                    
+                    <div class="variance-details" style="display:${varStyle};">
+                        <div>SIS: <b>${item.qty_sis}</b></div>
+                        <div class="${color}">Selisih: <b>${diff}</b> (${formatRp(diffRp)})</div>
+                    </div>
+                </div>
+                <div class="qty-box">
+                    <div class="qty-label">FISIK</div>
+                    <div class="qty-val">${item.qty_fisik}</div>
+                </div>
+            </div>`;
+        });
+        calcTotal();
+    }
+
+    // --- 3. MODAL LOGIC (STEPPER) ---
+    window.openModal = function(idx) {
+        activeIndex = idx;
+        const item = sessionData.items[idx];
+        document.getElementById('modalItemName').innerText = item.nama;
+        document.getElementById('currentCount').innerText = item.qty_fisik;
+        document.getElementById('inputQty').value = ""; // Reset input box
+        document.getElementById('inputModal').style.display = 'flex';
+        document.getElementById('inputQty').focus();
+    }
+
+    window.closeModal = function() {
+        document.getElementById('inputModal').style.display = 'none';
+        activeIndex = null;
+    }
+
+    // FUNGSI STEPPER (TOMBOL PANAH)
+    window.adjustInput = function(delta) {
+        const el = document.getElementById('inputQty');
+        let val = parseInt(el.value);
+        
+        if (isNaN(val)) val = 0; // Jika kosong dianggap 0
+        val += delta;
+        
+        if (val < 0) val = 0; // Tidak boleh minus
+        el.value = val;
+    }
+
+    window.submitQty = function(action) {
+        const valStr = document.getElementById('inputQty').value;
+        
+        if (action === 'ADD') {
+             if(valStr === "") return alert("Masukkan jumlah dulu!");
+             const val = parseInt(valStr);
+             sessionData.items[activeIndex].qty_fisik += val;
+        } 
+        else if (action === 'RESET') {
+            if(confirm("⚠ Yakin ingin MERISET hitungan item ini menjadi 0?")) {
+                sessionData.items[activeIndex].qty_fisik = 0;
+            } else {
+                return; // Batal reset
+            }
+        }
+
+        closeModal();
+        renderTable();
+    }
+
+    // --- 4. FINISH & PRINT ---
+    window.toggleVariance = function() {
+        const pass = prompt("Masukkan PIN:");
+        if(pass === 'A1') { // PIN Statis
+            isVarianceShown = !isVarianceShown;
+            document.getElementById('summaryArea').style.display = isVarianceShown ? 'flex' : 'none';
+            renderTable();
+        } else {
+            alert("PIN Salah!");
+        }
+    }
+
+    function calcTotal() {
+        let tot = 0;
+        sessionData.items.forEach(i => {
+            const p = masterPriceMap.get(String(i.plu)) || 0;
+            tot += ((i.qty_fisik - i.qty_sis) * p);
+        });
+        const el = document.getElementById('totalVariance');
+        el.innerText = formatRp(tot);
+        el.className = tot < 0 ? 'red' : 'green';
+    }
+
+    function formatRp(n) { return "Rp " + n.toLocaleString('id-ID'); }
+
+    window.finishSO = function() {
+        if(!confirm("Simpan Permanen & Cetak Laporan?")) return;
+
+        const totalRp = document.getElementById('totalVariance').innerText;
+        const finalData = {
+            ...sessionData,
+            shift: currentShift,
+            selesai_pada: new Date().toISOString(),
+            total_variance_rp: totalRp
+        };
+
+        // Simpan ke Riwayat
+        push(ref(db, 'riwayat_so'), finalData).then(() => {
+            
+            // 1. HAPUS SESI SEMENTARA
+            remove(ref(db, 'session_so/' + sessionData.nik));
+
+            // 2. UNLOCK FOLDER KATEGORI (Agar user lain bisa masuk)
+            if (sessionData.kategori !== 'CUSTOM') {
+                remove(ref(db, 'active_locks/' + sessionData.kategori));
+            }
+            
+            // 3. Print Setup
+            document.getElementById('pUser').innerText = sessionData.user;
+            document.getElementById('pShift').innerText = currentShift;
+            document.getElementById('pCat').innerText = sessionData.kategori;
+            document.getElementById('pDate').innerText = new Date().toLocaleDateString('id-ID');
+            document.getElementById('pTotalRp').innerText = totalRp;
+
+            const tbody = document.getElementById('printBody');
+            tbody.innerHTML = "";
+            sessionData.items.forEach(i => {
+                const diff = i.qty_fisik - i.qty_sis;
+                tbody.innerHTML += `
+                    <tr><td colspan="4" style="font-weight:bold; padding-top:5px;">${i.nama}</td></tr>
+                    <tr>
+                        <td>${i.plu}</td>
+                        <td>${i.qty_sis}</td>
+                        <td>${i.qty_fisik}</td>
+                        <td>${diff}</td>
+                    </tr>`;
+            });
+
+            window.print();
+            
+            setTimeout(() => {
+                const u = JSON.parse(localStorage.getItem('so_session'));
+                window.location.href = u.role === 'MASTER' ? 'dashboard_master.html' : 'dashboard_user.html';
+            }, 1000);
+        });
+    }
+
+    window.openModal = window.openModal;
+    window.closeModal = window.closeModal;
+    window.submitQty = window.submitQty;
+    window.adjustInput = window.adjustInput; 
+    window.toggleVariance = window.toggleVariance;
+    window.finishSO = window.finishSO;
+
+</script>
+</body>
+</html>

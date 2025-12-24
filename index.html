@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SIS Login System</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3a6ea5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <style>
+        /* TAMPILAN WINDOWS CLASSIC */
+        body {
+            background-color: #3a6ea5;
+            font-family: 'Tahoma', sans-serif;
+            font-size: 11px;
+            margin: 0; padding: 0;
+            height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            overflow: hidden;
+        }
+
+        .login-window {
+            width: 320px;
+            background-color: #ece9d8;
+            border: 2px outset #fff;
+            box-shadow: 10px 10px 20px rgba(0,0,0,0.3);
+            display: flex; flex-direction: column;
+        }
+
+        .win-header {
+            background: linear-gradient(to right, #000080, #1084d0);
+            padding: 5px 8px; color: white; font-weight: bold;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .win-body { padding: 25px 20px; display: flex; flex-direction: column; gap: 15px; }
+
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        .label { font-weight: bold; color: #000; font-size: 11px; }
+        
+        .input-net {
+            border: 2px inset #fff;
+            padding: 10px; font-family: 'Tahoma';
+            font-size: 16px; outline: none;
+            background: #fff; text-align: center;
+            font-weight: bold; letter-spacing: 3px;
+            width: 100%; box-sizing: border-box;
+        }
+        .input-net:focus { background: #ffffcc; }
+
+        /* Matikan tanda panah pada input number */
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .btn-group { display: flex; justify-content: center; gap: 10px; margin-top: 5px; }
+
+        .btn-win {
+            border: 2px outset #fff;
+            background: #ece9d8; padding: 6px 20px;
+            font-weight: bold; font-size: 11px; cursor: pointer;
+            min-width: 90px;
+        }
+        .btn-win:active { border-style: inset; transform: translate(1px, 1px); }
+
+        .footer-info { text-align: center; color: #666; font-size: 9px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="login-window">
+    <div class="win-header">
+        <span>🔐 SIS Authenticator</span>
+        <div style="border:1px solid #fff; width:14px; height:14px; line-height:12px; text-align:center; cursor:pointer; background:#ece9d8; color:#000;">x</div>
+    </div>
+    
+    <div class="win-body">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+            <div style="font-size:32px;">🔑</div>
+            <div style="font-size:12px; color:#000; font-weight: bold;">
+                LOGIN SISTEM
+            </div>
+        </div>
+
+        <div class="input-group">
+            <span class="label">MASUKKAN NIK (8 DIGIT):</span>
+            <input type="number" id="nik" class="input-net" placeholder="00000000" maxlength="8" oninput="if(this.value.length > 8) this.value = this.value.slice(0, 8);" autofocus>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-win" id="btnLogin">OK</button>
+            <button class="btn-win" onclick="document.getElementById('nik').value=''">Cancel</button>
+        </div>
+
+        <div class="footer-info">System Build v3.5 // Direct Access Mode</div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCz55fYcd-WecBgw9ISF2XmlWpde8Z5IwU",
+        authDomain: "stockopname-54349.firebaseapp.com",
+        projectId: "stockopname-54349",
+        storageBucket: "stockopname-54349.firebasestorage.app",
+        messagingSenderId: "138553024724",
+        appId: "1:138553024724:web:8ea32c06d2bca888e4db41",
+        databaseURL: "https://stockopname-54349-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const btnLogin = document.getElementById('btnLogin');
+    const nikInput = document.getElementById('nik');
+
+    async function processLogin() {
+        const nikValue = nikInput.value.trim();
+
+        if (nikValue === "") {
+            alert("NIK tidak boleh kosong!");
+            return;
+        }
+
+        btnLogin.innerText = "WAIT...";
+        btnLogin.disabled = true;
+
+        try {
+            const dbRef = ref(db);
+            const snapshot = await get(child(dbRef, `users/${nikValue}`));
+            
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                
+                // Simpan Sesi
+                localStorage.setItem('so_session', JSON.stringify({
+                    nik: nikValue,
+                    nama: data.nama,
+                    role: data.role
+                }));
+
+                // Redirect sesuai Role
+                if (data.role === 'MASTER') {
+                    window.location.href = 'dashboard_master.html';
+                } else {
+                    window.location.href = 'dashboard_user.html';
+                }
+            } else {
+                alert("Gagal: NIK " + nikValue + " tidak terdaftar.");
+                btnLogin.disabled = false;
+                btnLogin.innerText = "OK";
+            }
+        } catch (err) {
+            alert("Error: Koneksi terputus.");
+            btnLogin.disabled = false;
+            btnLogin.innerText = "OK";
+        }
+    }
+
+    btnLogin.addEventListener('click', processLogin);
+    nikInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') processLogin();
+    });
+</script>
+
+</body>
+</html>

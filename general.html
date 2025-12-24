@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1565c0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GENERAL SETUP - MASTER</title>
+    <style>
+        /* --- INDUSTRIAL THEME --- */
+        body {
+            margin: 0; padding: 0;
+            background-color: #e3f2fd;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+        }
+
+        /* HEADER */
+        .app-header {
+            background: #f57f17; /* Orange untuk General Setup */
+            color: white; padding: 0 20px; height: 60px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .header-title { font-weight: 800; font-size: 16px; text-transform: uppercase; }
+        .btn-back {
+            background: rgba(255,255,255,0.2); color: white; text-decoration: none;
+            padding: 8px 15px; border-radius: 4px; font-weight: bold; font-size: 12px;
+        }
+
+        /* CONTAINER */
+        .container {
+            padding: 30px; display: flex; flex-direction: column; align-items: center;
+        }
+
+        /* MENU GRID */
+        .menu-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); /* 2 Kolom */
+            gap: 20px; width: 100%; max-width: 600px;
+        }
+
+        .menu-card {
+            background: white; border-radius: 10px;
+            border: 1px solid #cfd8dc; border-bottom: 5px solid #78909c;
+            padding: 25px; text-align: center; cursor: pointer;
+            text-decoration: none; color: #333; transition: 0.1s;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 160px;
+        }
+        .menu-card:active { transform: translateY(3px); border-bottom: 2px solid #78909c; }
+        .menu-card:hover { border-color: #1565c0; }
+
+        .icon { font-size: 40px; margin-bottom: 10px; }
+        .label { font-weight: 800; font-size: 14px; text-transform: uppercase; color: #455a64; }
+
+        /* WARNA KHUSUS TOMBOL */
+        .btn-user { border-bottom-color: #00897b; } /* Teal */
+        .btn-server { border-bottom-color: #7b1fa2; } /* Ungu (Database) */
+        .btn-sched { border-bottom-color: #c62828; } /* Merah */
+        .btn-dash { border-bottom-color: #1565c0; background: #e3f2fd; } /* Biru */
+
+    </style>
+</head>
+<body>
+
+<div class="app-header">
+    <div class="header-title">⚙️ GENERAL SETUP</div>
+    <a href="dashboard_master.html" class="btn-back">KEMBALI</a>
+</div>
+
+<div class="container">
+    <div style="margin-bottom:20px; font-weight:bold; color:#f57f17;">PENGATURAN SISTEM UTAMA</div>
+
+    <div class="menu-grid">
+
+        <a href="setup_user.html" class="menu-card btn-user">
+            <div class="icon">👤</div>
+            <div class="label">Manajemen User</div>
+        </a>
+
+        <a href="list_plu.html" class="menu-card btn-server">
+            <div class="icon">🗄️</div>
+            <div class="label">Server Utama (PLU)</div>
+        </a>
+
+        <a href="setup_so.html" class="menu-card btn-sched">
+            <div class="icon">🛠️</div>
+            <div class="label">Setup Item SO</div>
+        </a>
+
+        <a href="dashboard_master.html" class="menu-card btn-dash">
+            <div class="icon">🏠</div>
+            <div class="label">Dashboard</div>
+        </a>
+
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCz55fYcd-WecBgw9ISF2XmlWpde8Z5IwU",
+        authDomain: "stockopname-54349.firebaseapp.com",
+        projectId: "stockopname-54349",
+        storageBucket: "stockopname-54349.firebasestorage.app",
+        messagingSenderId: "138553024724",
+        appId: "1:138553024724:web:8ea32c06d2bca888e4db41",
+        databaseURL: "https://stockopname-54349-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // SECURITY CHECK
+    window.onload = function() {
+        const session = localStorage.getItem('so_session');
+        if (!session) { window.location.href = 'index.html'; return; }
+        
+        const u = JSON.parse(session);
+        if(u.role !== 'MASTER') {
+            alert("Akses Ditolak!");
+            window.location.href = 'index.html';
+        }
+    }
+</script>
+
+</body>
+</html>

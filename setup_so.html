@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1565c0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SETUP SO - MASTER</title>
+    <style>
+        /* --- RESET & MOBILE BASE --- */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            margin: 0; padding: 0;
+            background-color: #f0f4f8;
+            font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;
+            color: #333;
+            padding-bottom: 90px; /* Space untuk tombol simpan floating */
+        }
+
+        /* --- 1. SECURITY LOADING --- */
+        #securityOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #1565c0; z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            color: white; font-weight: bold;
+        }
+        .spinner {
+            width: 40px; height: 40px; border: 4px solid #fff;
+            border-top: 4px solid transparent; border-radius: 50%;
+            animation: spin 1s linear infinite; margin-bottom: 15px;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* --- 2. HEADER FIXED --- */
+        .header-container {
+            position: fixed; top: 0; left: 0; width: 100%;
+            z-index: 100; background: #1565c0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .app-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 15px; color: white;
+        }
+        .header-title { font-size: 16px; font-weight: 800; text-transform: uppercase; }
+        .btn-back {
+            background: rgba(255,255,255,0.2); color: white; text-decoration: none;
+            padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: bold;
+        }
+
+        /* CATEGORY SCROLL (NAVIGASI ATAS) */
+        .category-scroll {
+            display: flex; overflow-x: auto; gap: 10px; padding: 10px 15px;
+            background: #fff; border-bottom: 1px solid #ddd;
+            scrollbar-width: none;
+        }
+        .category-scroll::-webkit-scrollbar { display: none; }
+
+        .cat-btn {
+            flex: 0 0 auto; padding: 10px 20px; border-radius: 20px;
+            background: #f5f5f5; color: #555; border: 1px solid #e0e0e0;
+            font-size: 12px; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; gap: 6px; transition: 0.2s;
+        }
+        .cat-btn.active {
+            background: #e3f2fd; color: #1565c0; border-color: #1565c0;
+            box-shadow: 0 2px 5px rgba(21, 101, 192, 0.2);
+        }
+        
+        /* STYLE KHUSUS SO ST */
+        .cat-st {
+            background: #ffebee; color: #c62828; border-color: #ef9a9a;
+        }
+        .cat-st.active {
+            background: #b71c1c; color: white; border-color: #b71c1c;
+        }
+
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; }
+        .dot-active { background: #00c853; box-shadow: 0 0 4px #00c853; }
+
+        /* --- CONTENT WRAPPER --- */
+        .content-wrapper { margin-top: 115px; padding: 15px; }
+
+        /* CONFIG CARD (TOGGLE) */
+        .config-card {
+            background: white; border-radius: 12px; padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid #bbdefb;
+        }
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #1565c0; }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        /* SEARCH BAR */
+        .search-box {
+            width: 100%; padding: 12px; border: 1px solid #ddd;
+            border-radius: 10px; font-size: 14px; background: #fff;
+            margin-bottom: 15px; outline: none;
+        }
+
+        /* --- MAIN LIST (Scrollable Box) --- */
+        .main-list-box {
+            max-height: 350px; overflow-y: auto; 
+            border: 1px solid #eee; border-radius: 10px;
+            background: #fafafa; padding: 5px;
+            margin-bottom: 20px;
+        }
+
+        .item-row {
+            background: white; padding: 12px; border-radius: 8px;
+            display: flex; align-items: center; gap: 12px;
+            border: 1px solid #eee; margin-bottom: 8px; transition: 0.1s;
+        }
+        .item-row.checked { background: #e3f2fd; border-color: #90caf9; }
+
+        .big-checkbox {
+            width: 20px; height: 20px; border-radius: 4px; border: 2px solid #aaa;
+            display: flex; align-items: center; justify-content: center;
+            background: white; flex-shrink: 0;
+        }
+        .item-row.checked .big-checkbox { background: #1565c0; border-color: #1565c0; }
+        .big-checkbox::after { content: '✔'; font-size: 14px; color: white; display: none; }
+        .item-row.checked .big-checkbox::after { display: block; }
+
+        .item-info { flex: 1; }
+        .plu { font-size: 11px; color: #888; font-family: monospace; }
+        .name { font-size: 13px; font-weight: 600; color: #333; }
+
+        /* --- REVIEW SECTION (SELECTED ITEMS) --- */
+        .review-section {
+            background: #fff; border: 2px solid #1565c0; 
+            border-radius: 12px; overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .review-header {
+            background: #1565c0; color: white; padding: 10px 15px;
+            font-size: 12px; font-weight: 800; text-transform: uppercase;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .btn-clear {
+            background: rgba(255,255,255,0.2); border: none; color: white;
+            font-size: 10px; padding: 4px 8px; border-radius: 4px; cursor: pointer;
+        }
+        .review-container {
+            padding: 10px; max-height: 300px; overflow-y: auto;
+        }
+        .review-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px; border-bottom: 1px solid #eee;
+            font-size: 12px;
+        }
+        .btn-remove-mini {
+            color: #c62828; font-weight: bold; border: 1px solid #ffcdd2;
+            background: #ffebee; padding: 4px 8px; border-radius: 4px; font-size: 10px;
+        }
+
+        /* FLOATING FOOTER */
+        .fab-container {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: white; padding: 15px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 90;
+        }
+        .info-count { font-size: 12px; color: #555; font-weight: bold; }
+        .btn-save {
+            background: #1565c0; color: white; border: none;
+            padding: 12px 30px; border-radius: 8px; font-weight: bold;
+            font-size: 14px; box-shadow: 0 4px 10px rgba(21, 101, 192, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+<div id="securityOverlay">
+    <div class="spinner"></div>
+    <div>SECURE CONNECTION...</div>
+</div>
+
+<div class="header-container">
+    <div class="app-header">
+        <div class="header-title">Setup SO</div>
+        <a href="general.html" class="btn-back">Kembali</a>
+    </div>
+
+    <div class="category-scroll">
+        <div class="cat-btn cat-st" onclick="selectCategory('SO_ST', this)" id="btn-SO_ST">
+            <div class="status-dot" id="dot-SO_ST"></div> 🚨 SO ST (WAJIB)
+        </div>
+
+        <div class="cat-btn" onclick="selectCategory('PSM', this)" id="btn-PSM">
+            <div class="status-dot" id="dot-PSM"></div> PSM
+        </div>
+        <div class="cat-btn" onclick="selectCategory('PWP', this)" id="btn-PWP">
+            <div class="status-dot" id="dot-PWP"></div> PWP
+        </div>
+        <div class="cat-btn" onclick="selectCategory('SEGAP', this)" id="btn-SEGAP">
+            <div class="status-dot" id="dot-SEGAP"></div> SEGAP
+        </div>
+        <div class="cat-btn" onclick="selectCategory('RAHIL', this)" id="btn-RAHIL">
+            <div class="status-dot" id="dot-RAHIL"></div> RAHIL
+        </div>
+        <div class="cat-btn" onclick="selectCategory('BEANSPOT', this)" id="btn-BEANSPOT">
+            <div class="status-dot" id="dot-BEANSPOT"></div> BEANSPOT
+        </div>
+    </div>
+</div>
+
+<div class="content-wrapper">
+    
+    <div class="config-card">
+        <div>
+            <div style="font-size:10px; color:#888; font-weight:bold;">KATEGORI AKTIF:</div>
+            <div style="font-size:16px; font-weight:bold; color:#1565c0;" id="activeTitle">PILIH MENU...</div>
+        </div>
+        <label class="switch">
+            <input type="checkbox" id="toggleStatus">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <input type="text" class="search-box" id="searchBox" placeholder="Cari barang (Nama / PLU)..." onkeyup="filterItems()">
+    
+    <div style="font-size:11px; font-weight:bold; color:#666; margin-bottom:5px;">DATABASE BARANG:</div>
+    <div id="itemList" class="main-list-box">
+        <div style="text-align:center; padding:20px; color:#999; font-size:12px;">
+            Pilih kategori di atas untuk memulai.
+        </div>
+    </div>
+
+    <div class="review-section">
+        <div class="review-header">
+            <span>ITEM TERPILIH (<span id="countReview">0</span>)</span>
+            <button class="btn-clear" onclick="clearSelection()">RESET</button>
+        </div>
+        <div id="reviewContainer" class="review-container">
+            <div style="text-align:center; padding:20px; color:#aaa; font-style:italic;">
+                Belum ada item yang diceklis.
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="fab-container">
+    <div class="info-count" id="selectedCount">0 Dipilih</div>
+    <button class="btn-save" onclick="saveConfiguration()">SIMPAN</button>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCz55fYcd-WecBgw9ISF2XmlWpde8Z5IwU",
+        authDomain: "stockopname-54349.firebaseapp.com",
+        projectId: "stockopname-54349",
+        storageBucket: "stockopname-54349.firebasestorage.app",
+        messagingSenderId: "138553024724",
+        appId: "1:138553024724:web:8ea32c06d2bca888e4db41",
+        databaseURL: "https://stockopname-54349-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    
+    // VARIABLES
+    let currentCategory = "";
+    let masterItems = []; 
+    let masterMap = new Map(); 
+    let selectedSet = new Set();
+
+    // --- 1. SECURITY & LOAD ---
+    window.onload = function() {
+        history.pushState(null, null, location.href);
+        window.onpopstate = function () { history.go(1); };
+
+        const session = localStorage.getItem('so_session');
+        if (!session) { forceLogout(); return; }
+
+        const localUser = JSON.parse(session);
+        
+        get(ref(db, 'users/' + localUser.nik)).then((snapshot) => {
+            const dbUser = snapshot.val();
+            if (dbUser && dbUser.role === 'MASTER') {
+                loadMasterData(); 
+            } else {
+                alert("Akses Master Ditolak.");
+                forceLogout();
+            }
+        }).catch(() => forceLogout());
+    }
+
+    function forceLogout() {
+        localStorage.removeItem('so_session');
+        window.location.replace("index.html");
+    }
+
+    function loadMasterData() {
+        get(ref(db, 'stok_opname')).then((snapshot) => {
+            const data = snapshot.val();
+            masterMap.clear();
+            if (data) {
+                Object.values(data).forEach(item => {
+                    if (!masterMap.has(String(item.plu))) {
+                        masterMap.set(String(item.plu), { 
+                            plu: String(item.plu), 
+                            nama: item.nama 
+                        });
+                    }
+                });
+            }
+            masterItems = Array.from(masterMap.values());
+            
+            // Monitor status lampu
+            loadAllConfigs();
+            document.getElementById('securityOverlay').style.display = 'none';
+        });
+    }
+
+    function loadAllConfigs() {
+        onValue(ref(db, 'so_config'), (snapshot) => {
+            const data = snapshot.val() || {};
+            ['SO_ST', 'PSM', 'PWP', 'SEGAP', 'RAHIL', 'BEANSPOT'].forEach(cat => {
+                const dot = document.getElementById(`dot-${cat}`);
+                if(dot) {
+                    if (data[cat] && data[cat].status === 'OPEN') dot.classList.add('dot-active');
+                    else dot.classList.remove('dot-active');
+                }
+            });
+        });
+    }
+
+    // --- 2. SELECTION LOGIC ---
+    window.selectCategory = function(cat, btn) {
+        currentCategory = cat;
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('activeTitle').innerText = cat;
+
+        get(ref(db, `so_config/${cat}`)).then((snapshot) => {
+            const config = snapshot.val() || { status: 'CLOSED', items: [] };
+            document.getElementById('toggleStatus').checked = (config.status === 'OPEN');
+            
+            selectedSet = new Set((config.items || []).map(String));
+            renderMainList();
+            renderReviewList();
+        });
+    }
+
+    // --- 3. RENDER MAIN LIST ---
+    function renderMainList() {
+        const container = document.getElementById('itemList');
+        container.innerHTML = "";
+        
+        if(masterItems.length === 0) {
+            container.innerHTML = '<div style="padding:20px; text-align:center;">Database Kosong.</div>';
+            return;
+        }
+
+        masterItems.forEach(item => {
+            const isChecked = selectedSet.has(item.plu);
+            const activeClass = isChecked ? 'checked' : '';
+            
+            const div = document.createElement('div');
+            div.className = `item-row ${activeClass}`;
+            div.dataset.search = (item.nama + " " + item.plu).toLowerCase();
+            div.id = `row-${item.plu}`;
+            div.onclick = () => toggleItem(item.plu);
+            
+            div.innerHTML = `
+                <div class="big-checkbox"></div>
+                <div class="item-info">
+                    <div class="name">${item.nama}</div>
+                    <div class="plu">PLU: ${item.plu}</div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+        updateCounts();
+    }
+
+    window.toggleItem = function(plu) {
+        plu = String(plu);
+        const row = document.getElementById(`row-${plu}`);
+        
+        if (selectedSet.has(plu)) {
+            selectedSet.delete(plu);
+            if(row) row.classList.remove('checked');
+        } else {
+            selectedSet.add(plu);
+            if(row) row.classList.add('checked');
+        }
+        
+        updateCounts();
+        renderReviewList(); 
+    }
+
+    // --- 4. RENDER REVIEW LIST ---
+    function renderReviewList() {
+        const container = document.getElementById('reviewContainer');
+        container.innerHTML = "";
+
+        if (selectedSet.size === 0) {
+            container.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa; font-size:12px;">Belum ada item dipilih.</div>';
+            return;
+        }
+
+        selectedSet.forEach(plu => {
+            const item = masterMap.get(plu);
+            if (item) {
+                const div = document.createElement('div');
+                div.className = 'review-item';
+                div.innerHTML = `
+                    <div style="flex:1;">
+                        <div style="font-weight:bold; color:#333;">${item.nama}</div>
+                        <div style="font-size:10px; color:#888;">${item.plu}</div>
+                    </div>
+                    <div class="btn-remove-mini" onclick="toggleItem('${item.plu}')">HAPUS</div>
+                `;
+                container.appendChild(div);
+            }
+        });
+    }
+
+    function updateCounts() {
+        const count = selectedSet.size;
+        document.getElementById('selectedCount').innerText = `${count} Dipilih`;
+        document.getElementById('countReview').innerText = count;
+    }
+
+    window.filterItems = function() {
+        const query = document.getElementById('searchBox').value.toLowerCase();
+        const rows = document.querySelectorAll('.item-row');
+        rows.forEach(row => {
+            row.style.display = row.dataset.search.includes(query) ? 'flex' : 'none';
+        });
+    }
+
+    window.clearSelection = function() {
+        if(confirm("Hapus semua checklist?")) {
+            selectedSet.clear();
+            renderMainList();
+            renderReviewList();
+        }
+    }
+
+    window.saveConfiguration = function() {
+        if (!currentCategory) return alert("Pilih kategori dulu!");
+
+        const status = document.getElementById('toggleStatus').checked ? 'OPEN' : 'CLOSED';
+        const itemsArr = Array.from(selectedSet);
+        
+        const btn = document.querySelector('.btn-save');
+        btn.innerText = "MENYIMPAN...";
+        btn.disabled = true;
+
+        set(ref(db, `so_config/${currentCategory}`), {
+            status: status,
+            items: itemsArr,
+            updated_at: new Date().toISOString()
+        }).then(() => {
+            alert("✅ KONFIGURASI TERSIMPAN!");
+            btn.innerText = "SIMPAN";
+            btn.disabled = false;
+        });
+    }
+
+    window.selectCategory = window.selectCategory;
+    window.filterItems = window.filterItems;
+    window.saveConfiguration = window.saveConfiguration;
+    window.clearSelection = window.clearSelection;
+    window.toggleItem = window.toggleItem;
+</script>
+
+</body>
+</html>

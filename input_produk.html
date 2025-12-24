@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batch Import Utility</title>
+    <style>
+        /* --- WINDOWS FORMS .NET THEME --- */
+        body {
+            background-color: #f0f0f0;
+            font-family: 'Tahoma', 'Segoe UI', sans-serif;
+            font-size: 11px;
+            margin: 0; padding: 0;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh;
+            color: #000;
+        }
+
+        /* MAIN FORM CONTAINER */
+        .win-form {
+            width: 95%; height: 95vh;
+            background-color: #f0f0f0;
+            border: 1px solid #666;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
+            display: flex; flex-direction: column;
+        }
+
+        /* TITLE BAR */
+        .title-bar {
+            background: linear-gradient(to bottom, #89a9ce, #4872a8); /* Classic Win Gradient */
+            padding: 5px 10px; color: white; font-weight: bold;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #333;
+            font-size: 12px; text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+        }
+        .win-controls button {
+            width: 20px; height: 18px; border: 1px solid white;
+            background: #d54e21; color: white; font-weight: bold;
+            line-height: 14px; font-size: 10px; cursor: pointer;
+        }
+
+        /* TOOLSTRIP (MENU ATAS) */
+        .toolstrip {
+            background: linear-gradient(to bottom, #fcfcfc, #e3e3e3);
+            padding: 5px; border-bottom: 1px solid #a0a0a0;
+            display: flex; gap: 5px; align-items: center;
+        }
+
+        /* BUTTON .NET STYLE */
+        .btn-net {
+            border: 1px solid #707070;
+            background: linear-gradient(to bottom, #f2f2f2, #dcdcdc);
+            padding: 4px 12px; border-radius: 2px;
+            font-size: 11px; cursor: pointer; color: #333;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .btn-net:hover {
+            border-color: #3c7fb1;
+            background: linear-gradient(to bottom, #eaf6fd, #d9f0fc);
+        }
+        .btn-net:active {
+            background: #c2e4f6; border-color: #2c628b;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .btn-net:disabled { color: #999; border-color: #ccc; background: #eee; }
+
+        /* CONTENT AREA */
+        .content-panel {
+            padding: 10px; flex: 1; display: flex; flex-direction: column; gap: 10px;
+            overflow: hidden;
+        }
+
+        /* GROUP BOX */
+        .group-box {
+            border: 1px solid #d0d0bf; border-radius: 4px;
+            padding: 10px; margin-top: 5px; position: relative;
+            background: #fff;
+        }
+        .group-label {
+            position: absolute; top: -8px; left: 10px;
+            background: #fff; padding: 0 5px; color: #003399; font-weight: bold;
+        }
+
+        /* INPUT FIELDS (XP STYLE) */
+        textarea, input[type="text"] {
+            border: 1px solid #7f9db9; /* XP Blue Border */
+            padding: 4px; font-family: 'Consolas', monospace; font-size: 12px;
+            width: 100%; box-sizing: border-box; resize: vertical; outline: none;
+        }
+        textarea:focus, input:focus { border-color: #ff9900; }
+
+        /* DATAGRIDVIEW (TABLE) */
+        .grid-wrapper {
+            border: 1px solid #999; flex: 1; overflow: auto; background: white;
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        
+        th {
+            background: linear-gradient(to bottom, #fff, #e4e4e4);
+            border-right: 1px solid #d0d0d0; border-bottom: 1px solid #999;
+            padding: 4px; text-align: left; font-weight: normal; color: #333;
+            position: sticky; top: 0;
+        }
+        td { border: 1px solid #eee; padding: 3px 5px; color: #333; }
+        tr:nth-child(even) { background: #f7f7f7; }
+        tr:hover { background: #eef5fb; }
+
+        /* STATUS BADGES */
+        .badge-dup { color: red; font-weight: bold; }
+        .badge-ok { color: green; font-weight: bold; }
+
+        /* STATUS STRIP (FOOTER) */
+        .status-strip {
+            background: #f0f0f0; border-top: 1px solid #999;
+            padding: 3px 5px; display: flex; gap: 10px;
+            font-size: 11px; color: #333;
+        }
+        .status-item {
+            border: 1px solid #ccc; background: white; 
+            padding: 2px 5px; min-width: 100px;
+            box-shadow: inset 1px 1px 1px rgba(0,0,0,0.1);
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="win-form">
+    <div class="title-bar">
+        <span>🛒 SIS Master Data Import Utility</span>
+        <div class="win-controls">
+            <button onclick="window.location.href='list_plu.html'">X</button>
+        </div>
+    </div>
+
+    <div class="toolstrip">
+        <button class="btn-net" onclick="loadFromText()">
+            <span>📂</span> Load JSON
+        </button>
+        <button class="btn-net" onclick="clearDraft()">
+            <span>🗑️</span> Clear Buffer
+        </button>
+        <div style="width: 1px; height: 20px; background: #ccc; margin: 0 5px;"></div>
+        <button class="btn-net" id="btnUpload" onclick="uploadAllToFirebase()" disabled>
+            <span>☁️</span> <b>Upload to Server</b>
+        </button>
+    </div>
+
+    <div class="content-panel">
+        
+        <div class="group-box">
+            <span class="group-label">Source Data (JSON)</span>
+            <textarea id="jsonInput" style="height: 60px;" placeholder='[ {"plu":"123", "nama":"CONTOH", "harga":1000, "rak":"A1"} ]'></textarea>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <label>Filter Grid:</label>
+            <input type="text" id="searchInput" onkeyup="window.renderTable()" placeholder="Type to filter..." style="width: 250px; font-family: 'Tahoma';">
+        </div>
+
+        <div class="grid-wrapper">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th width="60">State</th>
+                        <th width="60">Rak</th>
+                        <th width="100">PLU Code</th>
+                        <th>Product Description</th>
+                        <th width="100" style="text-align:right;">Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="5" style="text-align:center; padding: 20px; color: #999;">No Records Loaded</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <div class="status-strip">
+        <div class="status-item">Count: <span id="count">0</span></div>
+        <div class="status-item" style="flex:1;" id="msg">System Ready.</div>
+        <div class="status-item">Server: Connected</div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, push, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    // --- FIREBASE CONFIG (SAME) ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyCz55fYcd-WecBgw9ISF2XmlWpde8Z5IwU",
+        authDomain: "stockopname-54349.firebaseapp.com",
+        projectId: "stockopname-54349",
+        storageBucket: "stockopname-54349.firebasestorage.app",
+        messagingSenderId: "138553024724",
+        appId: "1:138553024724:web:8ea32c06d2bca888e4db41",
+        databaseURL: "https://stockopname-54349-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const dbRef = ref(db);
+    
+    window.draftList = [];
+
+    function setStatus(msg, isError = false) {
+        const el = document.getElementById('msg');
+        el.innerText = msg;
+        el.style.color = isError ? 'red' : 'black';
+    }
+
+    // --- 1. LOAD AUTO-SAVE ---
+    window.onload = function() {
+        const saved = localStorage.getItem('stokDraft_Paste');
+        if (saved) {
+            window.draftList = JSON.parse(saved);
+            window.renderTable();
+            checkBtn();
+            setStatus("Restored data from local cache.");
+        }
+    };
+
+    // --- 2. PARSE TEXT ---
+    window.loadFromText = function() {
+        const raw = document.getElementById('jsonInput').value.trim();
+        if (!raw) return setStatus("Error: Input box is empty.", true);
+
+        try {
+            const json = JSON.parse(raw);
+            if (!Array.isArray(json)) throw new Error("JSON must be an Array [ ... ]");
+
+            let count = 0;
+            let currentPlus = new Set(window.draftList.map(i => String(i.plu)));
+
+            json.forEach(item => {
+                let p = String(item.plu || "");
+                if (p && !currentPlus.has(p)) {
+                    window.draftList.push({
+                        rak: item.rak || "-",
+                        plu: p,
+                        nama: item.nama || "NO NAME",
+                        harga: parseInt(item.harga || 0),
+                        status: 'draft'
+                    });
+                    currentPlus.add(p);
+                    count++;
+                }
+            });
+
+            localStorage.setItem('stokDraft_Paste', JSON.stringify(window.draftList));
+            window.renderTable(); 
+            checkBtn();
+            document.getElementById('jsonInput').value = ""; 
+            setStatus(`Successfully parsed ${count} records.`);
+
+        } catch (e) {
+            alert("Invalid JSON Format!\n\n" + e.message);
+            setStatus("Parse Error.", true);
+        }
+    }
+
+    // --- 3. RENDER TABLE ---
+    window.renderTable = function() {
+        const tbody = document.querySelector('#dataTable tbody');
+        const searchInput = document.getElementById('searchInput');
+        const keyword = searchInput ? searchInput.value.toLowerCase() : "";
+
+        tbody.innerHTML = '';
+        
+        let dataToShow = window.draftList;
+        
+        if (keyword) {
+            dataToShow = window.draftList.filter(item => {
+                return item.nama.toLowerCase().includes(keyword) || 
+                       item.plu.includes(keyword) || 
+                       item.rak.toLowerCase().includes(keyword);
+            });
+        }
+
+        document.getElementById('count').innerText = dataToShow.length;
+
+        if (dataToShow.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px; color: #999;">List is empty</td></tr>';
+            return;
+        }
+
+        dataToShow.slice().reverse().forEach(item => {
+            let statusBadge = item.status === 'duplicate' 
+                ? '<span class="badge-dup">Exist</span>' 
+                : '<span class="badge-ok">Ready</span>';
+
+            tbody.innerHTML += `<tr>
+                <td>${statusBadge}</td>
+                <td>${item.rak}</td>
+                <td>${item.plu}</td>
+                <td>${item.nama}</td>
+                <td style="text-align:right">${item.harga.toLocaleString('id-ID')}</td>
+            </tr>`;
+        });
+    }
+
+    function checkBtn() {
+        document.getElementById('btnUpload').disabled = window.draftList.length === 0;
+    }
+
+    // --- 4. UPLOAD FIREBASE ---
+    window.uploadAllToFirebase = async function() {
+        if (window.draftList.length === 0) return;
+
+        const btn = document.getElementById('btnUpload');
+        btn.disabled = true;
+        setStatus("Connecting to Database...");
+        
+        try {
+            // DOWNLOAD EXISTING
+            const snap = await get(child(dbRef, 'stok_opname'));
+            
+            let dbPlu = new Set();
+            if (snap.exists()) {
+                snap.forEach(c => {
+                    const val = c.val();
+                    if(val.plu) dbPlu.add(String(val.plu));
+                });
+            }
+            
+            let toUpload = [];
+            let dup = 0;
+
+            // CHECK DUPLICATES
+            window.draftList.forEach(i => {
+                if (dbPlu.has(String(i.plu))) {
+                    i.status = 'duplicate';
+                    dup++;
+                } else {
+                    toUpload.push(i);
+                }
+            });
+            window.renderTable(); 
+
+            // UPLOAD BATCH
+            if (toUpload.length > 0) {
+                setStatus(`Uploading ${toUpload.length} records...`);
+                
+                let promises = toUpload.map(i => {
+                    let { status, ...clean } = i;
+                    clean.plu = String(clean.plu); 
+                    return push(ref(db, 'stok_opname'), { 
+                        ...clean, 
+                        tanggal_input: new Date().toISOString() 
+                    });
+                });
+
+                await Promise.all(promises);
+                
+                // Keep only duplicates in local
+                window.draftList = window.draftList.filter(i => i.status === 'duplicate');
+                localStorage.setItem('stokDraft_Paste', JSON.stringify(window.draftList));
+                window.renderTable();
+
+                alert(`Process Complete!\n\nAdded: ${toUpload.length}\nSkipped (Duplicate): ${dup}`);
+                setStatus("Transaction Completed Successfully.");
+            } else {
+                setStatus("Operation skipped: All records already exist.", true);
+            }
+
+        } catch (e) { 
+            setStatus("Upload Failed: " + e.message, true);
+            alert("Connection Error!");
+        }
+        
+        checkBtn();
+    }
+
+    // --- 5. CLEAR ---
+    window.clearDraft = function() {
+        if(confirm("Clear current list?")) {
+            window.draftList = [];
+            localStorage.removeItem('stokDraft_Paste');
+            document.getElementById('searchInput').value = ""; 
+            window.renderTable();
+            checkBtn();
+            setStatus("Buffer cleared.");
+        }
+    }
+</script>
+
+</body>
+</html>

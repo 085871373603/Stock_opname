@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1565c0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MENU STOCK OPNAME</title>
+    <style>
+        /* --- INDUSTRIAL BLUE THEME --- */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            margin: 0; padding: 0;
+            background-color: #e3f2fd;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            color: #333; height: 100vh; width: 100vw; overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+
+        /* --- HEADER --- */
+        .app-header {
+            background: #1565c0; color: white; padding: 0 20px; height: 55px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 4px solid #0d47a1; flex-shrink: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .header-title { font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .date-display { 
+            font-size: 11px; background: rgba(0,0,0,0.2); padding: 5px 10px; 
+            border-radius: 4px; font-weight: bold; border: 1px solid rgba(255,255,255,0.3);
+            display: none; /* Muncul setelah tanggal dipilih */
+        }
+        .btn-back {
+            background: rgba(255,255,255,0.2); color: white; text-decoration: none;
+            padding: 5px 10px; border-radius: 4px; font-size: 10px; font-weight: bold;
+        }
+
+        /* --- MAIN CONTENT --- */
+        .main-content {
+            flex: 1; overflow-y: auto; padding: 20px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .welcome-text {
+            text-align: center; margin-bottom: 25px;
+            color: #1565c0; font-size: 14px; font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        /* --- GRID MENU --- */
+        .menu-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
+            width: 100%; max-width: 500px;
+        }
+
+        .menu-card {
+            background: white; border-radius: 10px;
+            border: 1px solid #90a4ae; border-bottom: 4px solid #546e7a;
+            padding: 20px 10px; text-align: center;
+            cursor: pointer; transition: 0.1s; position: relative;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 140px;
+        }
+        .menu-card:active { transform: translateY(3px); border-bottom: 2px solid #546e7a; background: #f5f5f5; }
+
+        .icon { font-size: 36px; margin-bottom: 10px; }
+        .label { font-size: 14px; font-weight: 800; color: #37474f; }
+        .status-pill {
+            font-size: 10px; padding: 3px 8px; border-radius: 10px;
+            margin-top: 8px; font-weight: bold; text-transform: uppercase;
+        }
+
+        /* STATUS COLORS */
+        .st-open { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+        .st-closed { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+        .st-custom { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+
+        /* DISABLED CARD */
+        .card-disabled {
+            background: #eceff1; border-color: #cfd8dc;
+            cursor: not-allowed; opacity: 0.7;
+        }
+        .card-disabled .icon, .card-disabled .label { color: #b0bec5; }
+        .lock-icon { position: absolute; top: 10px; right: 10px; font-size: 16px; color: #c62828; }
+
+        /* --- MODAL KALENDER --- */
+        #dateModal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(21, 101, 192, 0.9); /* Biru Transparan */
+            backdrop-filter: blur(5px); z-index: 2000;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .date-card {
+            background: white; padding: 25px; border-radius: 15px; width: 85%; max-width: 350px;
+            text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .date-input {
+            width: 100%; padding: 15px; font-size: 18px; text-align: center;
+            border: 2px solid #1565c0; border-radius: 8px; margin: 20px 0;
+            font-weight: bold; color: #333; outline: none;
+        }
+        .btn-confirm {
+            background: #1565c0; color: white; border: none; width: 100%;
+            padding: 12px; font-weight: bold; font-size: 14px; border-radius: 8px;
+            text-transform: uppercase; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        
+        /* SECURITY OVERLAY */
+        #securityOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1565c0; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; font-weight: bold; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #fff; border-top: 4px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+
+<div id="securityOverlay">
+    <div class="spinner"></div>
+    <div>INITIALIZING SYSTEM...</div>
+</div>
+
+<div id="dateModal" style="display:flex;"> <div class="date-card">
+        <div style="font-size:40px; margin-bottom:10px;">📅</div>
+        <h3 style="margin:0; color:#1565c0;">TANGGAL SO</h3>
+        <p style="font-size:12px; color:#666;">Pilih tanggal pelaksanaan Stock Opname</p>
+        
+        <input type="date" id="inputDate" class="date-input">
+        
+        <button class="btn-confirm" onclick="saveDate()">LANJUT KE MENU</button>
+    </div>
+</div>
+
+<div class="app-header">
+    <div class="header-title">📋 MENU SO</div>
+    <div id="displayDate" class="date-display"></div>
+    <a href="#" onclick="goBack()" class="btn-back">HOME</a>
+</div>
+
+<div class="main-content">
+    
+    <div class="welcome-text">
+        Pilih Jenis Stock Opname<br>
+        <span id="userName" style="color:#333; font-size:12px;">User: ...</span>
+    </div>
+
+    <div class="menu-grid">
+        
+        <div class="menu-card" onclick="openSoPage('CUSTOM')">
+            <div class="icon">📝</div>
+            <div class="label">CUSTOM / MANUAL</div>
+            <div class="status-pill st-custom">SELALU BUKA</div>
+        </div>
+
+        <div class="menu-card" id="card-PSM" onclick="checkAndOpen('PSM')">
+            <div class="icon">🏷️</div>
+            <div class="label">PSM</div>
+            <div class="status-pill st-closed" id="status-PSM">LOADING...</div>
+            <div class="lock-icon" id="lock-PSM">🔒</div>
+        </div>
+
+        <div class="menu-card" id="card-PWP" onclick="checkAndOpen('PWP')">
+            <div class="icon">🎁</div>
+            <div class="label">PWP</div>
+            <div class="status-pill st-closed" id="status-PWP">LOADING...</div>
+            <div class="lock-icon" id="lock-PWP">🔒</div>
+        </div>
+
+        <div class="menu-card" id="card-SEGAP" onclick="checkAndOpen('SEGAP')">
+            <div class="icon">⚡</div>
+            <div class="label">SEGAP</div>
+            <div class="status-pill st-closed" id="status-SEGAP">LOADING...</div>
+            <div class="lock-icon" id="lock-SEGAP">🔒</div>
+        </div>
+
+        <div class="menu-card" id="card-RAHIL" onclick="checkAndOpen('RAHIL')">
+            <div class="icon">🧴</div>
+            <div class="label">RAHIL</div>
+            <div class="status-pill st-closed" id="status-RAHIL">LOADING...</div>
+            <div class="lock-icon" id="lock-RAHIL">🔒</div>
+        </div>
+
+        <div class="menu-card" id="card-BEANSPOT" onclick="checkAndOpen('BEANSPOT')">
+            <div class="icon">☕</div>
+            <div class="label">BEANSPOT</div>
+            <div class="status-pill st-closed" id="status-BEANSPOT">LOADING...</div>
+            <div class="lock-icon" id="lock-BEANSPOT">🔒</div>
+        </div>
+
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCz55fYcd-WecBgw9ISF2XmlWpde8Z5IwU",
+        authDomain: "stockopname-54349.firebaseapp.com",
+        projectId: "stockopname-54349",
+        storageBucket: "stockopname-54349.firebasestorage.app",
+        messagingSenderId: "138553024724",
+        appId: "1:138553024724:web:8ea32c06d2bca888e4db41",
+        databaseURL: "https://stockopname-54349-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    
+    // Config Status Lokal
+    let configStatus = {};
+    let currentUser = null;
+
+    // --- 1. SECURITY & INIT ---
+    window.onload = function() {
+        const session = localStorage.getItem('so_session');
+        if (!session) { forceLogout(); return; }
+
+        currentUser = JSON.parse(session);
+        document.getElementById('userName').innerText = "User: " + currentUser.nama;
+        
+        // Setup Date Picker
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('inputDate').value = today;
+
+        // Cek apakah tanggal sudah dipilih sebelumnya di sesi ini?
+        const savedDate = sessionStorage.getItem('so_date');
+        if (savedDate) {
+            document.getElementById('dateModal').style.display = 'none';
+            document.getElementById('displayDate').style.display = 'block';
+            document.getElementById('displayDate').innerText = formatDate(savedDate);
+        }
+
+        // Hilangkan Security Overlay
+        document.getElementById('securityOverlay').style.display = 'none';
+
+        // Load Status Menu Realtime
+        loadMenuStatus();
+    }
+
+    function forceLogout() { localStorage.removeItem('so_session'); window.location.replace("index.html"); }
+    
+    window.goBack = function() {
+        if(currentUser.role === 'MASTER') window.location.href = 'dashboard_master.html';
+        else window.location.href = 'dashboard_user.html';
+    }
+
+    // --- 2. DATE LOGIC ---
+    window.saveDate = function() {
+        const dateVal = document.getElementById('inputDate').value;
+        if (!dateVal) return alert("Harap pilih tanggal!");
+
+        sessionStorage.setItem('so_date', dateVal);
+        
+        // UI Updates
+        document.getElementById('dateModal').style.display = 'none';
+        document.getElementById('displayDate').style.display = 'block';
+        document.getElementById('displayDate').innerText = formatDate(dateVal);
+    }
+
+    function formatDate(dateString) {
+        const options = { weekday: 'short', day: 'numeric', month: 'short' };
+        return new Date(dateString).toLocaleDateString('id-ID', options);
+    }
+
+    // --- 3. MENU STATUS LOGIC ---
+    function loadMenuStatus() {
+        onValue(ref(db, 'so_config'), (snapshot) => {
+            const data = snapshot.val() || {};
+            configStatus = data; // Simpan ke variabel global untuk pengecekan klik
+
+            const categories = ['PSM', 'PWP', 'SEGAP', 'RAHIL', 'BEANSPOT'];
+            
+            categories.forEach(cat => {
+                const card = document.getElementById(`card-${cat}`);
+                const pill = document.getElementById(`status-${cat}`);
+                const lock = document.getElementById(`lock-${cat}`);
+                
+                // Cek status di database
+                const isOpen = data[cat] && data[cat].status === 'OPEN';
+
+                if (isOpen) {
+                    // JIKA BUKA
+                    card.classList.remove('card-disabled');
+                    pill.className = 'status-pill st-open';
+                    pill.innerText = "DIBUKA";
+                    lock.style.display = 'none';
+                } else {
+                    // JIKA TUTUP
+                    card.classList.add('card-disabled');
+                    pill.className = 'status-pill st-closed';
+                    pill.innerText = "DITUTUP";
+                    lock.style.display = 'block';
+                }
+            });
+        });
+    }
+
+    // --- 4. NAVIGATION LOGIC ---
+    window.checkAndOpen = function(cat) {
+        // Cek status dari data yang sudah di-load
+        const catConfig = configStatus[cat];
+        
+        if (catConfig && catConfig.status === 'OPEN') {
+            openSoPage(cat);
+        } else {
+            // Animasi getar/shake jika diklik saat terkunci
+            const card = document.getElementById(`card-${cat}`);
+            card.style.transform = "translateX(5px)";
+            setTimeout(() => card.style.transform = "translateX(-5px)", 100);
+            setTimeout(() => card.style.transform = "none", 200);
+            
+            // Alert Halus (Toast) atau Alert Biasa
+            alert(`⛔ MENU ${cat} SEDANG DITUTUP OLEH ADMIN.`);
+        }
+    }
+
+    window.openSoPage = function(cat) {
+        // Simpan kategori yang dipilih ke Session
+        sessionStorage.setItem('active_category', cat);
+        
+        // Pindah ke halaman Input (Akan kita buat di prompt berikutnya)
+        // Kita namakan file baru: input_so.html
+        window.location.href = 'input_so.html';
+    }
+
+    window.saveDate = window.saveDate;
+    window.goBack = window.goBack;
+    window.checkAndOpen = window.checkAndOpen;
+    window.openSoPage = window.openSoPage;
+</script>
+
+</body>
+</html>

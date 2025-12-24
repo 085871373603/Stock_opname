@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>INPUT OH SIS - LOCKED</title>
+    <style>
+        /* --- COPY STYLE DARI SEBELUMNYA (TIDAK BERUBAH) --- */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; padding: 0; background-color: #eceff1; font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; color: #333; padding-bottom: 80px; }
+        .header-locked { background: #c62828; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 100; }
+        .header-title { font-size: 16px; font-weight: 800; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+        .blink { animation: blinker 1.5s linear infinite; font-size: 10px; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px; }
+        @keyframes blinker { 50% { opacity: 0; } }
+        #dateModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(38, 50, 56, 0.95); z-index: 2000; display: flex; justify-content: center; align-items: center; }
+        .date-card { background: white; padding: 25px; border-radius: 12px; width: 85%; max-width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .date-input { width: 100%; padding: 15px; font-size: 18px; text-align: center; font-weight: bold; border: 2px solid #1565c0; border-radius: 8px; margin: 15px 0; color: #333; }
+        .btn-date { background: #1565c0; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .container { padding: 15px; }
+        .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .cat-card { background: white; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #cfd8dc; border-bottom: 4px solid #b0bec5; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100px; position: relative;}
+        .cat-card:active { transform: translateY(3px); border-bottom: 2px solid #b0bec5; }
+        .cat-custom { background: #e3f2fd; border-color: #90caf9; border-bottom-color: #1976d2; }
+        .cat-custom h3 { color: #0d47a1; margin: 0; font-size: 14px; }
+        .cat-st { background: #ffebee; border: 2px solid #d32f2f; border-bottom: 5px solid #b71c1c; grid-column: span 2; }
+        .cat-st h3 { color: #c62828; margin: 0; font-size: 16px; font-weight: 900; }
+        .badge-wajib { background: #d32f2f; color: white; padding: 2px 8px; border-radius: 10px; font-size: 10px; margin-top: 5px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        .input-section { display: none; margin-top: 20px; }
+        .custom-add-box { background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #2196f3; margin-bottom: 15px; display: none; position: relative; }
+        .input-search { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        .search-results { margin-top: 5px; background: white; border: 1px solid #ccc; border-radius: 4px; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: none; }
+        .result-item { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .item-card { background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd; border-left: 5px solid #ccc; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; }
+        .item-card.filled { border-left-color: #2e7d32; background: #f1f8e9; }
+        .btn-remove { position: absolute; top: 10px; right: 10px; background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; padding: 2px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; display: none; }
+        .name { font-size: 14px; font-weight: bold; color: #333; margin-bottom: 10px; line-height: 1.3; }
+        .plu { font-family: monospace; font-size: 12px; font-weight: bold; color: #555; background: #eee; padding: 2px 5px; border-radius: 4px; }
+        .input-group { display: flex; align-items: center; gap: 10px; }
+        .label-oh { font-size: 12px; font-weight: bold; color: #1565c0; flex: 1; }
+        .input-qty { width: 100px; padding: 8px; font-size: 18px; text-align: center; border: 2px solid #bbb; border-radius: 4px; font-weight: bold; color: #333; }
+        .input-qty:focus { border-color: #1565c0; outline: none; background: #e3f2fd; }
+        .footer-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 15px; border-top: 1px solid #ccc; display: flex; gap: 10px; z-index: 99; }
+        .btn-action { flex: 1; padding: 12px; border: none; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer; text-transform: uppercase; }
+        .btn-cancel { background: #eceff1; color: #546e7a; border: 1px solid #cfd8dc; flex: 0.4; }
+        .btn-save { background: #1565c0; color: white; box-shadow: 0 4px 10px rgba(21, 101, 192, 0.3); }
+        .btn-disabled { background: #ccc; color: #fff; cursor: not-allowed; box-shadow: none; }
+        #securityOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #263238; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #fff; border-top: 4px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        /* INDIKATOR DIGEMBOK */
+        .locked-badge { 
+            position: absolute; top: 5px; right: 5px; 
+            background: #ff9800; color: white; font-size: 9px; 
+            padding: 2px 5px; border-radius: 4px; font-weight: bold;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div id="securityOverlay">
+    <div class="spinner"></div>
+    <div>MEMUAT SESI...</div>
+</div>
+
+<div id="dateModal">
+    <div class="date-card">
+        <h3 style="margin-top:0; color:#1565c0;">📅 TANGGAL SO</h3>
+        <p style="font-size:12px; color:#666; margin-bottom:5px;">Pilih tanggal pelaksanaan Stock Opname</p>
+        <input type="date" id="initDate" class="date-input">
+        <button class="btn-date" onclick="confirmDate()">MULAI SO</button>
+    </div>
+</div>
+
+<div class="header-locked">
+    <div class="header-title">
+        🔒 INPUT OH SIS
+        <span class="blink">LOCKED</span>
+    </div>
+    <div style="text-align:right;">
+        <div style="font-size:12px; font-weight:bold;" id="userName">...</div>
+        <div style="font-size:10px; opacity:0.8;" id="displayDateHeader">...</div>
+    </div>
+</div>
+
+<div class="container">
+    <div id="sectionSelect" style="display:none;">
+        <div style="margin-bottom:15px; font-size:12px; font-weight:bold; color:#555;">
+            PILIH JENIS SO:
+        </div>
+        <div id="catGrid" class="cat-grid">
+            <div class="cat-card cat-custom" onclick="selectCategory('CUSTOM', [])">
+                <h3>📝 CUSTOM / MANUAL</h3>
+                <p style="margin:5px 0 0 0; font-size:11px; color:#666;">Cari Bebas</p>
+            </div>
+            </div>
+    </div>
+
+    <div id="sectionInput" class="input-section">
+        <div id="infoBox" style="background:#fff3cd; color:#856404; padding:10px; border-radius:4px; font-size:11px; margin-bottom:15px; border:1px solid #ffeeba;">
+            ℹ️ Masukkan <b>Qty OH (On Hand)</b> sesuai data komputer.
+        </div>
+        <div id="customAddArea" class="custom-add-box">
+            <div style="font-size:11px; font-weight:bold; margin-bottom:5px; color:#1565c0;">CARI BARANG (NAMA / PLU):</div>
+            <input type="text" id="searchBar" class="input-search" placeholder="Ketik nama / PLU..." autocomplete="off" onkeyup="searchItem()">
+            <div id="searchResultBox" class="search-results"></div>
+        </div>
+        <div id="itemList"></div>
+    </div>
+</div>
+
+<div class="footer-bar">
+    <button id="btnCancel" class="btn-action btn-cancel" onclick="resetSelection()" style="display:none;">GANTI</button>
+    <button id="btnNext" class="btn-action btn-disabled" onclick="saveAndProceed()" disabled>PILIH KATEGORI</button>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, get, set, remove, onDisconnect, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCz55fYcd-WecBgw9ISF2XmlWpde8Z5IwU",
+        authDomain: "stockopname-54349.firebaseapp.com",
+        projectId: "stockopname-54349",
+        storageBucket: "stockopname-54349.firebasestorage.app",
+        messagingSenderId: "138553024724",
+        appId: "1:138553024724:web:8ea32c06d2bca888e4db41",
+        databaseURL: "https://stockopname-54349-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let currentUser = null;
+    let selectedCategory = null;
+    let masterItemsArray = [];
+    let masterItemsMap = new Map();
+    let currentItemsList = []; 
+    let activeDate = "";
+    let lockData = {}; // Menyimpan status lock realtime
+
+    // --- 1. INIT & SECURITY ---
+    window.onload = function() {
+        history.pushState(null, null, location.href);
+        window.onpopstate = function () { history.go(1); alert("⚠️ Sesi terkunci!"); };
+        window.onbeforeunload = function() { return "Data belum disimpan."; };
+
+        const session = localStorage.getItem('so_session');
+        if (!session) { window.location.href = 'index.html'; return; }
+        currentUser = JSON.parse(session);
+        document.getElementById('userName').innerText = currentUser.nama;
+        document.getElementById('initDate').value = new Date().toISOString().split('T')[0];
+
+        loadMasterData().then(() => {
+            document.getElementById('securityOverlay').style.display = 'none';
+            // Monitor status lock dari DB secara realtime
+            monitorLocks();
+        });
+    }
+
+    // --- MONITOR LOCKS ---
+    function monitorLocks() {
+        onValue(ref(db, 'active_locks'), (snapshot) => {
+            lockData = snapshot.val() || {};
+            // Refresh visual indikator di kartu kategori
+            document.querySelectorAll('.cat-card').forEach(el => {
+                const cat = el.dataset.category; // Kita akan set dataset ini nanti
+                if(cat && cat !== 'CUSTOM') {
+                    const badge = el.querySelector('.locked-badge');
+                    if(lockData[cat] && lockData[cat].nik !== currentUser.nik) {
+                        // Sedang dikerjakan user lain
+                        if(badge) {
+                            badge.style.display = 'block';
+                            badge.innerText = "🔒 " + lockData[cat].user.split(' ')[0];
+                        }
+                        el.style.opacity = "0.7";
+                    } else {
+                        if(badge) badge.style.display = 'none';
+                        el.style.opacity = "1";
+                    }
+                }
+            });
+        });
+    }
+
+    // --- 2. DATE CONFIRMATION ---
+    window.confirmDate = function() {
+        const d = document.getElementById('initDate').value;
+        if(!d) return alert("Pilih tanggal dulu!");
+        activeDate = d;
+        sessionStorage.setItem('so_date', d);
+        document.getElementById('displayDateHeader').innerText = d;
+        document.getElementById('dateModal').style.display = 'none';
+        document.getElementById('sectionSelect').style.display = 'block';
+        loadActiveDrafts();
+    }
+
+    function loadMasterData() {
+        return get(ref(db, 'stok_opname')).then((snapshot) => {
+            const data = snapshot.val();
+            if(data) {
+                Object.values(data).forEach(i => {
+                    const pluStr = String(i.plu);
+                    if(!masterItemsMap.has(pluStr)){
+                        masterItemsMap.set(pluStr, i.nama);
+                        masterItemsArray.push({ plu: pluStr, nama: i.nama });
+                    }
+                });
+            }
+        });
+    }
+
+    function loadActiveDrafts() {
+        get(ref(db, 'so_config')).then((snapshot) => {
+            const data = snapshot.val();
+            const grid = document.getElementById('catGrid');
+            if(data) {
+                Object.keys(data).forEach(cat => {
+                    const config = data[cat];
+                    if(config.status === 'OPEN') {
+                        const div = document.createElement('div');
+                        div.dataset.category = cat; // Untuk identifikasi lock
+                        
+                        if(cat === 'SO_ST') {
+                            div.className = "cat-card cat-st";
+                            div.innerHTML = `
+                                <h3>🚨 ${cat}</h3>
+                                <div class="badge-wajib">WAJIB (3 SHIFT)</div>
+                                <div class="locked-badge"></div>
+                                <p style="margin:5px 0 0 0; font-size:11px;">${config.items ? config.items.length : 0} Item</p>
+                            `;
+                        } else {
+                            div.className = "cat-card";
+                            div.innerHTML = `
+                                <h3>${cat}</h3>
+                                <div class="locked-badge"></div>
+                                <p style="margin:5px 0 0 0; font-size:11px; color:#777;">${config.items ? config.items.length : 0} Item</p>
+                            `;
+                        }
+                        
+                        div.onclick = () => selectCategory(cat, config.items);
+                        grid.appendChild(div);
+                    }
+                });
+            }
+        });
+    }
+
+    // --- 3. UI LOGIC & LOCK CHECK ---
+    window.selectCategory = function(cat, items) {
+        // CEK LOCK SEBELUM MASUK
+        if (cat !== 'CUSTOM') {
+            // Cek apakah ada yang sedang mengerjakan?
+            if (lockData[cat]) {
+                // Jika itu saya sendiri (misal refresh), boleh lanjut.
+                if (lockData[cat].nik !== currentUser.nik) {
+                    alert(`⛔ AKSES DITOLAK!\n\nRak/Kategori ini sedang dikerjakan oleh: ${lockData[cat].user}.\nSilakan pilih kategori lain.`);
+                    return; // STOP
+                }
+            }
+            
+            // KUNCI KATEGORI INI (LOCKING)
+            const lockRef = ref(db, 'active_locks/' + cat);
+            set(lockRef, {
+                user: currentUser.nama,
+                nik: currentUser.nik,
+                timestamp: new Date().toISOString()
+            });
+            
+            // Auto unlock jika koneksi putus (Mati lampu/tutup tab paksa)
+            onDisconnect(lockRef).remove();
+        }
+
+        selectedCategory = cat;
+        currentItemsList = items || []; 
+        
+        document.getElementById('sectionSelect').style.display = 'none';
+        document.getElementById('sectionInput').style.display = 'block';
+        document.getElementById('btnCancel').style.display = 'block';
+        
+        const btnNext = document.getElementById('btnNext');
+        btnNext.className = "btn-action btn-save";
+        btnNext.innerText = "SIMPAN & LANJUT KK SO ➡";
+        btnNext.disabled = false;
+
+        if (cat === 'CUSTOM') {
+            document.getElementById('customAddArea').style.display = 'block';
+            document.getElementById('infoBox').innerHTML = "ℹ️ Mode <b>CUSTOM</b>: Cari dan tambahkan item manual.";
+            document.getElementById('searchBar').focus();
+        } else {
+            document.getElementById('customAddArea').style.display = 'none';
+        }
+
+        renderItems();
+    }
+
+    // --- 4. RENDER & SEARCH ---
+    window.searchItem = function() {
+        const query = document.getElementById('searchBar').value.toLowerCase();
+        const box = document.getElementById('searchResultBox');
+        if(query.length < 2) { box.style.display = 'none'; return; }
+
+        const matches = masterItemsArray.filter(i => 
+            i.nama.toLowerCase().includes(query) || i.plu.includes(query)
+        ).slice(0, 8);
+
+        box.innerHTML = "";
+        if(matches.length > 0) {
+            box.style.display = 'block';
+            matches.forEach(m => {
+                const div = document.createElement('div');
+                div.className = "result-item";
+                div.innerHTML = `<span style="font-size:12px; font-weight:bold;">${m.nama}</span> <span style="font-size:10px; background:#eee;">${m.plu}</span>`;
+                div.onclick = () => addItem(m.plu);
+                box.appendChild(div);
+            });
+        } else { box.style.display = 'none'; }
+    }
+
+    function addItem(plu) {
+        if(currentItemsList.includes(plu)) { alert("Item sudah ada!"); } 
+        else { currentItemsList.push(plu); renderItems(); }
+        document.getElementById('searchBar').value = "";
+        document.getElementById('searchResultBox').style.display = 'none';
+    }
+
+    function renderItems() {
+        const list = document.getElementById('itemList');
+        list.innerHTML = "";
+
+        if(currentItemsList.length === 0) {
+            list.innerHTML = '<div style="padding:20px; text-align:center; color:#999;">Daftar item kosong.</div>';
+            return;
+        }
+
+        currentItemsList.forEach((plu, idx) => {
+            const nama = masterItemsMap.get(String(plu)) || "ITEM TIDAK DIKENAL";
+            
+            const div = document.createElement('div');
+            div.className = "item-card";
+            div.innerHTML = `
+                <button class="btn-remove" onclick="removeItem(${idx})" style="display:${selectedCategory === 'CUSTOM' ? 'block' : 'none'}">HAPUS</button>
+                <div style="margin-bottom:5px;">
+                    <span class="plu">${plu}</span>
+                </div>
+                <div class="name">${nama}</div>
+                <div class="input-group">
+                    <span class="label-oh">QTY OH (SIS):</span>
+                    <input type="number" class="input-qty" data-plu="${plu}" data-nama="${nama}" placeholder="0" oninput="validateInput(this)">
+                </div>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    window.removeItem = function(idx) {
+        if(confirm("Hapus item ini?")) { currentItemsList.splice(idx, 1); renderItems(); }
+    }
+
+    window.validateInput = function(el) {
+        const card = el.closest('.item-card');
+        if(el.value !== "") card.classList.add('filled');
+        else card.classList.remove('filled');
+    }
+
+    // --- RESET / BATAL (UNLOCKING) ---
+    window.resetSelection = function() {
+        if(confirm("Ganti kategori? Data input akan hilang.")) {
+            // UNLOCK DULU
+            if (selectedCategory !== 'CUSTOM') {
+                remove(ref(db, 'active_locks/' + selectedCategory));
+            }
+
+            document.getElementById('sectionSelect').style.display = 'block';
+            document.getElementById('sectionInput').style.display = 'none';
+            document.getElementById('btnCancel').style.display = 'none';
+            document.getElementById('btnNext').innerText = "PILIH KATEGORI";
+            document.getElementById('btnNext').className = "btn-action btn-disabled";
+            document.getElementById('btnNext').disabled = true;
+            selectedCategory = null;
+        }
+    }
+
+    // --- 5. SAVE ---
+    window.saveAndProceed = function() {
+        const inputs = document.querySelectorAll('.input-qty');
+        if(inputs.length === 0) return alert("Tidak ada item!");
+
+        let sessionData = [];
+        inputs.forEach(inp => {
+            sessionData.push({
+                plu: inp.dataset.plu,
+                nama: inp.dataset.nama,
+                qty_sis: parseInt(inp.value) || 0
+            });
+        });
+
+        const btn = document.getElementById('btnNext');
+        btn.innerText = "MENYIMPAN...";
+        btn.disabled = true;
+
+        const payload = {
+            user: currentUser.nama,
+            nik: currentUser.nik,
+            kategori: selectedCategory,
+            items: sessionData,
+            timestamp: new Date().toISOString(),
+            status: 'ON_PROCESS',
+            tanggal_so: activeDate
+        };
+
+        set(ref(db, 'session_so/' + currentUser.nik), payload)
+        .then(() => {
+            // Note: Kita TIDAK unlock di sini.
+            // Unlock dilakukan di halaman kk_so.html saat 'SELESAI',
+            // agar selama user menghitung fisik, kategori itu masih terkunci.
+            window.onbeforeunload = null;
+            window.location.href = "kk_so.html";
+        })
+        .catch((err) => {
+            alert("Gagal: " + err.message);
+            btn.disabled = false;
+        });
+    }
+
+    window.confirmDate = window.confirmDate;
+    window.selectCategory = window.selectCategory;
+    window.searchItem = window.searchItem;
+    window.removeItem = window.removeItem;
+    window.validateInput = window.validateInput;
+    window.resetSelection = window.resetSelection;
+    window.saveAndProceed = window.saveAndProceed;
+
+</script>
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1565c0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAPORAN GABUNGAN SO ST</title>
+    <style>
+        /* --- INDUSTRIAL THEME --- */
+        body { margin: 0; padding: 0; background: #e3f2fd; font-family: 'Segoe UI', Tahoma, sans-serif; color: #333; }
+        
+        /* HEADER */
+        .app-header {
+            background: #d32f2f; /* Merah Laporan ST */
+            color: white; padding: 0 20px; height: 60px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .header-title { font-weight: 800; font-size: 16px; text-transform: uppercase; }
+        .btn-back {
+            background: rgba(255,255,255,0.2); color: white; text-decoration: none;
+            padding: 8px 15px; border-radius: 4px; font-weight: bold; font-size: 12px;
+        }
+
+        /* CONTAINER */
+        .container { padding: 20px; max-width: 1200px; margin: 0 auto; }
+
+        /* FILTER BAR */
+        .filter-box {
+            background: white; padding: 15px; border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px;
+            display: flex; gap: 10px; align-items: center; border-left: 5px solid #d32f2f;
+        }
+        .date-input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; }
+        .btn-load { background: #1565c0; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-print { background: #333; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-left: auto; }
+
+        /* REPORT CONTENT */
+        .report-block {
+            background: white; border-radius: 8px; overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 30px;
+        }
+        
+        .date-divider {
+            background: #ffebee; color: #b71c1c; padding: 12px 20px;
+            font-weight: 900; font-size: 14px; border-bottom: 2px solid #ef9a9a;
+        }
+
+        /* TABLE MATRIX */
+        .matrix-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        
+        .matrix-table th {
+            padding: 10px 5px; border: 1px solid #ddd;
+            text-align: center; font-weight: 800; text-transform: uppercase;
+        }
+        .matrix-table td {
+            padding: 8px 5px; border: 1px solid #eee; text-align: center; vertical-align: middle;
+        }
+
+        /* HEADER COLORS */
+        .th-item { background: #37474f; color: white; width: 25%; text-align: left !important; padding-left: 10px !important; }
+        .th-s1 { background: #e3f2fd; color: #0d47a1; width: 25%; }
+        .th-s2 { background: #fff3e0; color: #e65100; width: 25%; }
+        .th-s3 { background: #e8f5e9; color: #1b5e20; width: 25%; }
+
+        /* CELL COLORS */
+        .bg-s1 { background: #fdfdfd; }
+        .bg-s2 { background: #fffbf5; }
+        .bg-s3 { background: #f1f8e9; }
+
+        /* FOOTER STYLE */
+        .matrix-table tfoot td {
+            background: #eceff1; border-top: 2px solid #546e7a;
+            font-weight: 900; color: #333; padding: 10px 5px;
+        }
+
+        /* VARIANCE COLORS */
+        .diff-zero { color: #ccc; }
+        .diff-neg { color: red; font-weight: bold; background: #ffebee; padding: 2px 4px; border-radius: 3px; }
+        .diff-pos { color: green; font-weight: bold; background: #e8f5e9; padding: 2px 4px; border-radius: 3px; }
+
+        .item-name { font-weight: bold; color: #333; display: block; }
+        .item-plu { font-size: 9px; color: #888; font-family: monospace; }
+        
+        .total-rp { font-size: 10px; display: block; margin-top: 2px; }
+
+        /* PRINT SETTINGS */
+        @media print {
+            .app-header, .filter-box { display: none; }
+            body { background: white; padding: 0; }
+            .container { padding: 0; margin: 0; max-width: 100%; }
+            .matrix-table { font-size: 10px; }
+            .report-block { box-shadow: none; border: 1px solid #000; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-header">
+    <div class="header-title">🚨 LAPORAN MATRIKS SO ST</div>
+    <a href="dashboard_master.html" class="btn-back">KEMBALI KE DASHBOARD</a>
+</div>
+
+<div class="container">
+    
+    <div class="filter-box">
+        <label style="font-weight:bold; font-size:12px;">PILIH TANGGAL:</label>
+        <input type="date" id="filterDate" class="date-input">
+        <button onclick="loadReport()" class="btn-load">TAMPILKAN DATA</button>
+        <button onclick="window.print()" class="btn-print">🖨️ CETAK PDF</button>
+    </div>
+
+    <div id="reportContent">
+        <div style="text-align:center; padding:40px; color:#888;">
+            Silakan pilih tanggal dan klik "TAMPILKAN DATA".
+        </div>
+    </div>
+
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCz55fYcd-WecBgw9ISF2XmlWpde8Z5IwU",
+        authDomain: "stockopname-54349.firebaseapp.com",
+        projectId: "stockopname-54349",
+        storageBucket: "stockopname-54349.firebasestorage.app",
+        messagingSenderId: "138553024724",
+        appId: "1:138553024724:web:8ea32c06d2bca888e4db41",
+        databaseURL: "https://stockopname-54349-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Variabel Harga Master
+    let priceMap = new Map();
+
+    // Init: Load Harga dulu, baru set tanggal
+    window.onload = function() {
+        // Ambil data harga barang dari master
+        get(ref(db, 'stok_opname')).then((snapshot) => {
+            const m = snapshot.val();
+            if(m) {
+                Object.values(m).forEach(item => {
+                    priceMap.set(String(item.plu), parseInt(item.harga) || 0);
+                });
+            }
+            // Set Default Date Hari Ini & Load
+            document.getElementById('filterDate').value = new Date().toISOString().split('T')[0];
+            loadReport();
+        });
+    }
+
+    window.loadReport = function() {
+        const filterDate = document.getElementById('filterDate').value;
+        const container = document.getElementById('reportContent');
+        container.innerHTML = `<div style="text-align:center; padding:20px;">Memproses Data Matriks...</div>`;
+
+        onValue(ref(db, 'riwayat_so'), (snapshot) => {
+            const data = snapshot.val();
+            if(!data) { 
+                container.innerHTML = `<div style="text-align:center; padding:20px; color:red;">Database Kosong.</div>`; 
+                return; 
+            }
+
+            // 1. FILTERING (SO_ST & Tanggal)
+            let stData = [];
+            Object.values(data).forEach(r => {
+                if(r.kategori === 'SO_ST') {
+                    const rDate = r.selesai_pada.split('T')[0];
+                    if(rDate === filterDate) {
+                        stData.push({
+                            shiftCode: r.shift.charAt(0),
+                            user: r.user,
+                            items: r.items
+                        });
+                    }
+                }
+            });
+
+            if(stData.length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding:30px; color:#555;">Tidak ada data SO Serah Terima pada tanggal <b>${filterDate}</b>.</div>`;
+                return;
+            }
+
+            // 2. GROUPING SHIFT
+            const shiftData = { '1': null, '2': null, '3': null };
+            stData.forEach(d => shiftData[d.shiftCode] = d);
+
+            // 3. COLLECT ALL ITEMS
+            const allItemsMap = new Map(); 
+            ['1', '2', '3'].forEach(s => {
+                if(shiftData[s] && shiftData[s].items) {
+                    shiftData[s].items.forEach(i => allItemsMap.set(String(i.plu), i.nama));
+                }
+            });
+
+            // 4. TOTAL CALCULATOR
+            const totals = {
+                s1: { qty: 0, rp: 0 },
+                s2: { qty: 0, rp: 0 },
+                s3: { qty: 0, rp: 0 }
+            };
+
+            // 5. BUILD TABLE HTML
+            const u1 = shiftData['1'] ? shiftData['1'].user : '-';
+            const u2 = shiftData['2'] ? shiftData['2'].user : '-';
+            const u3 = shiftData['3'] ? shiftData['3'].user : '-';
+
+            let html = `
+                <div class="report-block">
+                    <div class="date-divider">TANGGAL LAPORAN: ${filterDate}</div>
+                    <table class="matrix-table">
+                        <thead>
+                            <tr>
+                                <th rowspan="2" class="th-item">NAMA BARANG / PLU</th>
+                                <th colspan="2" class="th-s1">SHIFT 1 <span class="user-label">(${u1})</span></th>
+                                <th colspan="2" class="th-s2">SHIFT 2 <span class="user-label">(${u2})</span></th>
+                                <th colspan="2" class="th-s3">SHIFT 3 <span class="user-label">(${u3})</span></th>
+                            </tr>
+                            <tr>
+                                <th class="th-s1" style="font-size:9px;">FISIK</th> <th class="th-s1" style="font-size:9px;">SELISIH</th>
+                                <th class="th-s2" style="font-size:9px;">FISIK</th> <th class="th-s2" style="font-size:9px;">SELISIH</th>
+                                <th class="th-s3" style="font-size:9px;">FISIK</th> <th class="th-s3" style="font-size:9px;">SELISIH</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            allItemsMap.forEach((nama, plu) => {
+                const price = priceMap.get(plu) || 0;
+
+                // Helper ambil data
+                const getRow = (sCode, tObj) => {
+                    if(!shiftData[sCode]) return { fisik: '-', diff: '-', css: '' };
+                    
+                    const item = shiftData[sCode].items.find(i => String(i.plu) === String(plu));
+                    if(!item) return { fisik: '-', diff: '-', css: '' };
+
+                    const diff = item.qty_fisik - item.qty_sis;
+                    
+                    // Akumulasi Total
+                    tObj.qty += diff;
+                    tObj.rp += (diff * price);
+
+                    const css = diff < 0 ? 'diff-neg' : (diff > 0 ? 'diff-pos' : 'diff-zero');
+                    return { fisik: item.qty_fisik, diff: diff, css: css };
+                };
+
+                const s1 = getRow('1', totals.s1);
+                const s2 = getRow('2', totals.s2);
+                const s3 = getRow('3', totals.s3);
+
+                html += `
+                    <tr>
+                        <td style="text-align:left; padding-left:10px;">
+                            <span class="item-name">${nama}</span>
+                            <span class="item-plu">${plu}</span>
+                        </td>
+                        
+                        <td class="bg-s1"><b>${s1.fisik}</b></td>
+                        <td class="bg-s1"><span class="${s1.css}">${s1.diff}</span></td>
+                        
+                        <td class="bg-s2"><b>${s2.fisik}</b></td>
+                        <td class="bg-s2"><span class="${s2.css}">${s2.diff}</span></td>
+                        
+                        <td class="bg-s3"><b>${s3.fisik}</b></td>
+                        <td class="bg-s3"><span class="${s3.css}">${s3.diff}</span></td>
+                    </tr>
+                `;
+            });
+
+            // 6. RENDER FOOTER (TOTALS)
+            // Helper warna rupiah
+            const getRpClass = (val) => val < 0 ? 'red' : (val > 0 ? 'green' : '');
+            
+            html += `</tbody>
+                    <tfoot>
+                        <tr>
+                            <td style="text-align:right; padding-right:10px;">TOTAL SELISIH:</td>
+                            
+                            <td colspan="2" style="text-align:center;">
+                                <div>Qty: <span class="${totals.s1.qty < 0 ? 'diff-neg' : 'diff-pos'}">${totals.s1.qty}</span></div>
+                                <div class="total-rp" style="color:${totals.s1.rp < 0 ? 'red' : 'green'}">
+                                    Rp ${totals.s1.rp.toLocaleString('id-ID')}
+                                </div>
+                            </td>
+                            
+                            <td colspan="2" style="text-align:center;">
+                                <div>Qty: <span class="${totals.s2.qty < 0 ? 'diff-neg' : 'diff-pos'}">${totals.s2.qty}</span></div>
+                                <div class="total-rp" style="color:${totals.s2.rp < 0 ? 'red' : 'green'}">
+                                    Rp ${totals.s2.rp.toLocaleString('id-ID')}
+                                </div>
+                            </td>
+
+                            <td colspan="2" style="text-align:center;">
+                                <div>Qty: <span class="${totals.s3.qty < 0 ? 'diff-neg' : 'diff-pos'}">${totals.s3.qty}</span></div>
+                                <div class="total-rp" style="color:${totals.s3.rp < 0 ? 'red' : 'green'}">
+                                    Rp ${totals.s3.rp.toLocaleString('id-ID')}
+                                </div>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>`;
+            
+            html += `
+                <div style="margin-top:20px; font-size:11px; color:#555; text-align:right;">
+                    Dicetak Otomatis oleh Sistem pada: ${new Date().toLocaleString('id-ID')}
+                </div>
+            `;
+
+            container.innerHTML = html;
+        });
+    }
+</script>
+
+</body>
+</html>

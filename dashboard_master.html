@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1565c0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MASTER - DASHBOARD</title>
+    
+    <style>
+        /* --- RESET & DASAR --- */
+        body {
+            margin: 0; padding: 0;
+            background-color: #e3f2fd;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh; width: 100vw;
+            overflow: hidden;
+            color: #333;
+        }
+
+        /* --- SECURITY OVERLAY --- */
+        #securityOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #1565c0; z-index: 9999;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            color: white; font-weight: bold;
+        }
+        .spinner {
+            width: 40px; height: 40px; border: 4px solid #fff;
+            border-top: 4px solid transparent; border-radius: 50%;
+            animation: spin 1s linear infinite; margin-bottom: 15px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* --- CONTAINER UTAMA --- */
+        .app-window {
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            opacity: 0; transition: opacity 0.5s;
+        }
+
+        /* --- HEADER --- */
+        .app-header {
+            background: #1565c0; color: white;
+            padding: 0 25px; height: 55px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 4px solid #0d47a1;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+        
+        .header-title { font-size: 20px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+        .header-info { font-size: 14px; background: rgba(0,0,0,0.2); padding: 5px 15px; border-radius: 4px; font-weight: bold; border: 1px solid rgba(255,255,255,0.3); }
+
+        /* --- AREA KONTEN --- */
+        .main-content {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: #e3f2fd;
+        }
+
+        /* KOTAK PROFIL */
+        .status-panel {
+            background: #fff; border: 2px solid #546e7a;
+            padding: 15px 50px; margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 6px 6px 0px rgba(0,0,0,0.1);
+        }
+        .user-label { font-size: 12px; color: #555; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+        .user-val { font-size: 24px; font-weight: 900; color: #1565c0; display: block; margin-top: 5px; }
+
+        /* --- GRID MENU --- */
+        .menu-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 20px; width: 90%; max-width: 1000px;
+        }
+
+        .menu-btn {
+            background: linear-gradient(to bottom, #ffffff, #f1f1f1);
+            border: 1px solid #90a4ae; border-bottom: 5px solid #546e7a;
+            height: 150px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            cursor: pointer; text-decoration: none; color: #333;
+            transition: all 0.1s; border-radius: 6px;
+            text-align: center;
+        }
+        .menu-btn:active { border-bottom: 2px solid #546e7a; transform: translateY(3px); background: #eceff1; }
+        .menu-btn:hover { background: #fff; border-color: #1565c0; }
+
+        .icon-box { font-size: 42px; margin-bottom: 10px; filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.1)); }
+        .lbl { font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: #37474f; }
+
+        /* WARNA TOMBOL */
+        .btn-so { border-bottom-color: #2e7d32; }   /* Hijau */
+        .btn-rep { border-bottom-color: #1565c0; }  /* Biru */
+        .btn-st { border-bottom-color: #c62828; background: #fffde7; } /* Merah/Kuning (Penting) */
+        .btn-gen { border-bottom-color: #f57f17; }  /* Orange */
+        .btn-conf { border-bottom-color: #00838f; } /* Cyan */
+        .btn-out { border-bottom-color: #37474f; background: #eceff1; } /* Abu */
+
+        /* --- FOOTER --- */
+        .status-bar {
+            background: #263238; color: #cfd8dc; padding: 10px 25px;
+            display: flex; justify-content: space-between; font-family: 'Consolas', monospace;
+            font-size: 12px; border-top: 3px solid #546e7a; flex-shrink: 0;
+        }
+
+        @media (max-width: 768px) {
+            .menu-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+            .menu-btn { height: 130px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="securityOverlay">
+    <div class="spinner"></div>
+    <div>VERIFYING MASTER TOKEN...</div>
+</div>
+
+<div class="app-window" id="appContent">
+    <div class="app-header">
+        <div class="header-title">MASTER PANEL</div>
+        <div class="header-info" id="headerNik">ID: -</div>
+    </div>
+
+    <div class="main-content">
+        
+        <div class="status-panel">
+            <span class="user-label">Administrator Access</span>
+            <span class="user-val" id="userName">...</span>
+        </div>
+
+        <div class="menu-grid">
+            
+            <a href="so.html" class="menu-btn btn-so">
+                <div class="icon-box">📦</div>
+                <div class="lbl">Stockopname</div>
+            </a>
+
+            <a href="setup_so.html" class="menu-btn btn-conf">
+                <div class="icon-box">🛠️</div>
+                <div class="lbl">Setup Item SO</div>
+            </a>
+
+            <a href="report.html" class="menu-btn btn-rep">
+                <div class="icon-box">📊</div>
+                <div class="lbl">Laporan Umum</div>
+            </a>
+
+            <a href="report_st.html" class="menu-btn btn-st">
+                <div class="icon-box">🚨</div>
+                <div class="lbl">Laporan SO ST</div>
+            </a>
+
+            <a href="general.html" class="menu-btn btn-gen">
+                <div class="icon-box">⚙️</div>
+                <div class="lbl">General Setup</div>
+            </a>
+
+            <div class="menu-btn btn-out" onclick="logout()">
+                <div class="icon-box">🛑</div>
+                <div class="lbl">Logout</div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <span>ENCRYPTED CONNECTION: ACTIVE</span>
+        <span id="clock">00:00:00</span>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCz55fYcd-WecBgw9ISF2XmlWpde8Z5IwU",
+        authDomain: "stockopname-54349.firebaseapp.com",
+        projectId: "stockopname-54349",
+        storageBucket: "stockopname-54349.firebasestorage.app",
+        messagingSenderId: "138553024724",
+        appId: "1:138553024724:web:8ea32c06d2bca888e4db41",
+        databaseURL: "https://stockopname-54349-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // --- SECURITY CHECK ---
+    window.onload = function() {
+        const session = localStorage.getItem('so_session');
+        if (!session) { forceLogout(); return; }
+
+        const localUser = JSON.parse(session);
+
+        // Validasi ke Server
+        const userRef = ref(db, 'users/' + localUser.nik);
+        get(userRef).then((snapshot) => {
+            if (snapshot.exists()) {
+                const dbUser = snapshot.val();
+                if (dbUser.role === 'MASTER') {
+                    document.getElementById('userName').innerText = dbUser.nama;
+                    document.getElementById('headerNik').innerText = "ID: " + dbUser.nik;
+                    
+                    document.getElementById('securityOverlay').style.display = 'none';
+                    document.getElementById('appContent').style.opacity = '1';
+                } else {
+                    alert("Akses Master Ditolak.");
+                    forceLogout();
+                }
+            } else {
+                alert("User Invalid.");
+                forceLogout();
+            }
+        }).catch((error) => {
+            alert("Error: " + error.message);
+        });
+    }
+
+    // --- LOGOUT ---
+    window.logout = function() {
+        if(confirm("Keluar dari Panel Master?")) {
+            forceLogout();
+        }
+    }
+
+    function forceLogout() {
+        localStorage.removeItem('so_session');
+        window.location.replace("index.html");
+    }
+
+    // --- ANTI BACK ---
+    history.pushState(null, null, location.href);
+    window.onpopstate = function () {
+        history.go(1);
+    };
+
+    // --- CLOCK ---
+    setInterval(() => {
+        const now = new Date();
+        document.getElementById('clock').innerText = now.toLocaleTimeString('id-ID');
+    }, 1000);
+</script>
+
+</body>
+</html>
