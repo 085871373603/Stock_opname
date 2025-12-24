@@ -145,7 +145,7 @@
         <span id="totalVariance" class="red">Rp 0</span>
     </div>
     <div class="btn-group">
-        <button class="btn btn-show" onclick="toggleVariance()">👁PRIVIEW SELISIH</button>
+        <button class="btn btn-show" onclick="toggleVariance()">👁 PRIVIEW SELISIH</button>
         <button class="btn btn-finish" onclick="confirmFinish()">💾 SELESAI & CETAK</button>
     </div>
 </div>
@@ -215,6 +215,15 @@
     let activeIndex = null;
     let isVarianceShown = false;
 
+    // --- PROTEKSI BACK BUTTON ---
+    function lockNavigation() {
+        history.pushState(null, null, location.href);
+        window.onpopstate = function() {
+            history.pushState(null, null, location.href);
+            customAlert("⚠ Navigasi terkunci! Selesaikan atau batalkan SO melalui tombol yang tersedia.");
+        };
+    }
+
     // --- CUSTOM POPUP LOGIC ---
     window.customAlert = (text) => {
         document.getElementById('msgText').innerText = text;
@@ -226,7 +235,7 @@
     window.closeMsg = () => { document.getElementById('msgModal').style.display = 'none'; }
 
     window.confirmFinish = () => {
-        document.getElementById('msgText').innerText = "Simpan & Cetak Laporan?";
+        document.getElementById('msgText').innerText = "Simpan & Cetak Laporan? Data yang sudah disimpan tidak bisa diubah.";
         const btnGroup = document.getElementById('msgButtons');
         btnGroup.innerHTML = `
             <button class="btn-modal btn-close" onclick="closeMsg()">BATAL</button>
@@ -237,6 +246,8 @@
 
     // --- 1. INIT ---
     window.onload = function() {
+        lockNavigation(); // Aktifkan proteksi back
+        
         const session = localStorage.getItem('so_session');
         if (!session) { window.location.href = 'index.html'; return; }
         const u = JSON.parse(session);
@@ -247,6 +258,11 @@
         document.getElementById('dispDate').innerText = new Date().toLocaleDateString('id-ID');
         loadSession(u.nik);
     }
+
+    // Cegah Refresh/Tutup Tab
+    window.onbeforeunload = function() {
+        return "Proses Stock Opname sedang berjalan. Anda yakin ingin keluar?";
+    };
 
     function loadSession(nik) {
         get(ref(db, 'session_so/' + nik)).then((snap) => {
@@ -341,6 +357,7 @@
     function formatRp(n) { return "Rp " + n.toLocaleString('id-ID'); }
 
     window.executeFinish = async () => {
+        window.onbeforeunload = null; // Matikan proteksi refresh saat selesai
         closeMsg();
         const totalRp = document.getElementById('totalVariance').innerText;
         const finalData = { ...sessionData, shift: currentShift, selesai_pada: new Date().toISOString(), total_variance_rp: totalRp };
